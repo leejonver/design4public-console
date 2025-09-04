@@ -97,13 +97,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (session?.user) {
         try {
+          console.log('Auth state change: User found, getting current user...')
           const currentUser = await getCurrentUser()
+          console.log('Auth state change: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
           setUser(currentUser)
         } catch (error) {
           console.error('Failed to get current user in auth state change:', error)
           setUser(null)
         }
       } else {
+        console.log('Auth state change: No user session')
         setUser(null)
       }
 
