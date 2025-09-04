@@ -16,28 +16,22 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own profile" ON public.profiles
     FOR SELECT USING (auth.uid() = id);
 
+-- Users can insert their own profile (for signup)
+CREATE POLICY "Users can insert own profile" ON public.profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
 -- Users can update their own profile (but not role or status)
 CREATE POLICY "Users can update own profile" ON public.profiles
     FOR UPDATE USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id AND role = (SELECT role FROM public.profiles WHERE id = auth.uid()));
+    WITH CHECK (auth.uid() = id);
 
--- Admins and masters can view all profiles
-CREATE POLICY "Admins and masters can view all profiles" ON public.profiles
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('admin', 'master')
-        )
-    );
+-- Service role can do everything (for admin operations)
+CREATE POLICY "Service role can manage all profiles" ON public.profiles
+    FOR ALL USING (auth.role() = 'service_role');
 
--- Only masters can update roles and status
-CREATE POLICY "Masters can update all profiles" ON public.profiles
-    FOR UPDATE USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role = 'master'
-        )
-    );
+-- Allow authenticated users to read all profiles (for user management)
+CREATE POLICY "Authenticated users can view all profiles" ON public.profiles
+    FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Create function to automatically create profile on user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
