@@ -29,7 +29,19 @@ export default function HomePage() {
     if (!loading && user) {
       console.log('Main page: User found, redirecting to dashboard')
       // 로그인된 경우 대시보드로 리다이렉트
-      router.push('/dashboard')
+      try {
+        router.replace('/dashboard')
+        // 만약 router.replace가 작동하지 않으면 강제 리다이렉트
+        setTimeout(() => {
+          if (window.location.pathname === '/') {
+            console.log('Router replace failed, using window.location')
+            window.location.href = '/dashboard'
+          }
+        }, 100)
+      } catch (error) {
+        console.error('Router redirect failed:', error)
+        window.location.href = '/dashboard'
+      }
     } else if (!loading && !user) {
       console.log('Main page: No user, showing login form')
     } else if (loading) {
