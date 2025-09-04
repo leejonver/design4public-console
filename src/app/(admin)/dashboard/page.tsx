@@ -20,15 +20,21 @@ export default function DashboardPage() {
 
   // 사용자 정보가 로드될 때까지 기다림
   useEffect(() => {
+    console.log('Dashboard useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status })
+
     if (!loading && !user) {
+      console.log('No user, redirecting to login')
       router.push('/login')
       return
     }
 
     if (user?.profile?.status !== 'approved') {
+      console.log('User not approved, status:', user?.profile?.status)
       router.push('/login?error=unauthorized')
       return
     }
+
+    console.log('User approved, loading dashboard')
 
     // 통계 데이터 로드 (실제로는 API 호출)
     setStats({
