@@ -115,30 +115,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           if (session?.user) {
             console.log('Initializing: Loading user from session...')
-            // 임시 사용자 설정
-            const tempUser = {
-              id: session.user.id,
-              email: session.user.email || '',
-              profile: undefined
-            }
-            setUser(tempUser)
 
-            // 프로필 로딩
+            // 프로필 로딩 먼저 실행
             try {
               const currentUser = await getCurrentUser()
               if (currentUser && mounted) {
                 setUser(currentUser)
+                setIsInitialized(true)
+                setLoading(false)
                 console.log('Initializing: Profile loaded successfully')
+                return
               }
             } catch (error) {
               console.error('Failed to load profile:', error)
-              // 프로필 로드 실패해도 임시 사용자는 유지
+              // 프로필 로드 실패 시 임시 사용자 설정
             }
-          }
 
-          setIsInitialized(true)
-          setLoading(false)
-          console.log('Initializing: Complete')
+            // 프로필 로드 실패 시에만 임시 사용자 설정
+            if (mounted) {
+              const tempUser = {
+                id: session.user.id,
+                email: session.user.email || '',
+                profile: undefined
+              }
+              setUser(tempUser)
+              setIsInitialized(true)
+              setLoading(false)
+              console.log('Initializing: Temp user set (profile load failed)')
+            }
+          } else {
+            setIsInitialized(true)
+            setLoading(false)
+            console.log('Initializing: No user session')
+          }
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error)

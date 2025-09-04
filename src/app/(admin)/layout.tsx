@@ -46,22 +46,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       return
     }
 
+    // 사용자가 없으면 로그인 페이지로
     if (!user) {
       console.log('Admin layout: No user, redirecting to login')
       router.push('/login?redirectTo=' + encodeURIComponent(pathname))
       return
     }
 
-    if (user?.profile?.status !== 'approved') {
-      console.log('Admin layout: User not approved, status:', user?.profile?.status)
+    // 프로필이 아직 로드되지 않은 경우 (임시 사용자 상태)
+    if (!user.profile) {
+      console.log('Admin layout: Profile not loaded yet, waiting...')
+      return
+    }
+
+    // 프로필 상태 체크
+    if (user.profile.status !== 'approved') {
+      console.log('Admin layout: User not approved, status:', user.profile.status)
       router.push('/login?error=unauthorized')
       return
     }
 
-    if (user?.profile?.status === 'approved') {
+    if (user.profile.status === 'approved') {
       console.log('Admin layout: User approved, proceeding')
     }
-  }, [user, loading, pathname]) // pathname 다시 추가
+  }, [user, loading, pathname])
 
   if (loading) {
     return (
@@ -74,7 +82,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
-  if (!user || user?.profile?.status !== 'approved') {
+  // 로딩 중이거나 프로필이 아직 로드되지 않은 경우
+  if (loading || !user || !user.profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>{loading ? '로딩 중...' : '프로필 로드 중...'}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 권한이 없는 경우
+  if (user.profile.status !== 'approved') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
