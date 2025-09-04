@@ -64,8 +64,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(session)
 
           if (session?.user) {
-            const currentUser = await getCurrentUser()
-            setUser(currentUser)
+            try {
+              const currentUser = await getCurrentUser()
+              setUser(currentUser)
+            } catch (error) {
+              console.error('Failed to get current user:', error)
+              setUser(null)
+            }
           }
         }
       } catch (error) {
@@ -90,8 +95,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(session)
 
       if (session?.user) {
-        const currentUser = await getCurrentUser()
-        setUser(currentUser)
+        try {
+          const currentUser = await getCurrentUser()
+          setUser(currentUser)
+        } catch (error) {
+          console.error('Failed to get current user in auth state change:', error)
+          setUser(null)
+        }
       } else {
         setUser(null)
       }
