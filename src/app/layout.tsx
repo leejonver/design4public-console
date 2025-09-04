@@ -1,33 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
 
-const pretendard = localFont({
-  src: [
-    {
-      path: "../../public/fonts/Pretendard-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Pretendard-Medium.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Pretendard-SemiBold.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Pretendard-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  variable: "--font-pretendard",
-  display: "swap",
-});
+// 폰트 파일이 없으므로 기본 시스템 폰트 사용
+// 추후 Pretendard 폰트 파일을 추가할 예정
 
 export const metadata: Metadata = {
   title: "Design4Public Console",
@@ -44,7 +21,9 @@ export default function RootLayout({
       <body
         className="font-sans antialiased bg-background text-foreground"
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

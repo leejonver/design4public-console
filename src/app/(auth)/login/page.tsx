@@ -1,22 +1,51 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { signIn } from '@/services/authService'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, loading: authLoading } = useAuth()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // URL 파라미터에서 에러 메시지 읽기
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    const redirectParam = searchParams.get('redirectTo')
+
+    if (errorParam === 'unauthorized') {
+      setError('계정이 승인되지 않았거나 접근 권한이 없습니다.')
+    } else if (errorParam === 'forbidden') {
+      setError('접근 권한이 없습니다.')
+    }
+
+    if (redirectParam) {
+      setError('로그인이 필요합니다.')
+    }
+  }, [searchParams])
+
+  // 이미 로그인된 사용자는 대시보드로 리다이렉트
+  useEffect(() => {
+    if (user && !authLoading) {
+      const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+      router.push(redirectTo)
+    }
+  }, [user, authLoading, router, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,18 +53,11 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      await signIn({ email, password })
 
-      if (error) {
-        throw error
-      }
-
-      // 로그인 성공 시 대시보드로 리다이렉트
-      router.push('/dashboard')
+      // 로그인 성공 시 리다이렉트 (useEffect에서 처리됨)
     } catch (error: any) {
+      console.error('Login error:', error)
       setError(error.message || '로그인에 실패했습니다.')
     } finally {
       setLoading(false)
@@ -106,9 +128,16 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || authLoading}
             >
-              {loading ? '로그인 중...' : '로그인'}
+              {loading || authLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  로그인 중...
+                </>
+              ) : (
+                '로그인'
+              )}
             </Button>
           </CardFooter>
         </form>
