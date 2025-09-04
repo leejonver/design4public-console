@@ -199,7 +199,7 @@ export default function ProjectsPage() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>프로젝트 삭제</AlertDialogTitle>
                         <AlertDialogDescription>
-                          정말로 "{project.title}" 프로젝트를 삭제하시겠습니까?
+                          정말로 &quot;{project.title}&quot; 프로젝트를 삭제하시겠습니까?
                           이 작업은 되돌릴 수 없습니다.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

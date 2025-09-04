@@ -25,11 +25,11 @@ export default function NewProjectPage() {
       })
 
       router.push('/projects')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create project:', error)
       toast({
         title: '프로젝트 생성 실패',
-        description: error.message || '프로젝트 생성 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '프로젝트 생성 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {

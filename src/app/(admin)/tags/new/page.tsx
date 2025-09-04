@@ -25,11 +25,11 @@ export default function NewTagPage() {
       })
 
       router.push('/tags')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create tag:', error)
       toast({
         title: '태그 생성 실패',
-        description: error.message || '태그 생성 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '태그 생성 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {

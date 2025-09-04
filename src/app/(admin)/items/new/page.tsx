@@ -25,11 +25,11 @@ export default function NewItemPage() {
       })
 
       router.push('/items')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create item:', error)
       toast({
         title: '아이템 생성 실패',
-        description: error.message || '아이템 생성 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '아이템 생성 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {

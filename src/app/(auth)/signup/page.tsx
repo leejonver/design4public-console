@@ -44,9 +44,9 @@ export default function SignupPage() {
     try {
       await signUp({ email, password })
       setSuccess(true)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error:', error)
-      setError(error.message || '회원가입에 실패했습니다.')
+      setError(error instanceof Error ? error.message : '회원가입에 실패했습니다.')
     } finally {
       setLoading(false)
     }

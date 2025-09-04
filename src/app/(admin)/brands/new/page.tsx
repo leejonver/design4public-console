@@ -25,11 +25,11 @@ export default function NewBrandPage() {
       })
 
       router.push('/brands')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create brand:', error)
       toast({
         title: '브랜드 생성 실패',
-        description: error.message || '브랜드 생성 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '브랜드 생성 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {

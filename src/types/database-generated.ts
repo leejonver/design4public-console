@@ -6,6 +6,68 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// Type aliases for easier usage
+export type Brand = Database['public']['Tables']['brands']['Row']
+export type BrandInsert = Database['public']['Tables']['brands']['Insert']
+export type BrandUpdate = Database['public']['Tables']['brands']['Update']
+
+export type Item = Database['public']['Tables']['items']['Row'] & {
+  brands?: {
+    id: string
+    name: string
+  } | null
+}
+export type ItemInsert = Database['public']['Tables']['items']['Insert']
+export type ItemUpdate = Database['public']['Tables']['items']['Update']
+
+export type Project = Database['public']['Tables']['projects']['Row'] & {
+  project_images?: Array<{
+    id: string
+    image_url: string
+    order: number | null
+    image_tags?: Array<{
+      tag_id: string
+      tags?: {
+        id: string
+        name: string
+      }
+    }>
+  }>
+  project_tags?: Array<{
+    tag_id: string
+    tags?: {
+      id: string
+      name: string
+    }
+  }>
+  project_items?: Array<{
+    item_id: string
+    items?: Item
+  }>
+}
+export type ProjectInsert = Database['public']['Tables']['projects']['Insert']
+export type ProjectUpdate = Database['public']['Tables']['projects']['Update']
+
+export type Tag = Database['public']['Tables']['tags']['Row']
+export type TagInsert = Database['public']['Tables']['tags']['Insert']
+export type TagUpdate = Database['public']['Tables']['tags']['Update']
+
+export type ProjectImage = Database['public']['Tables']['project_images']['Row']
+export type ProjectImageInsert = Database['public']['Tables']['project_images']['Insert']
+export type ProjectImageUpdate = Database['public']['Tables']['project_images']['Update']
+
+export type ProjectTag = Database['public']['Tables']['project_tags']['Row']
+export type ProjectTagInsert = Database['public']['Tables']['project_tags']['Insert']
+export type ProjectTagUpdate = Database['public']['Tables']['project_tags']['Update']
+
+export type ProjectItem = Database['public']['Tables']['project_items']['Row']
+export type ProjectItemInsert = Database['public']['Tables']['project_items']['Insert']
+export type ProjectItemUpdate = Database['public']['Tables']['project_items']['Update']
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)

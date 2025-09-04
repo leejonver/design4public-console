@@ -56,9 +56,9 @@ export default function LoginPage() {
       await signIn({ email, password })
 
       // 로그인 성공 시 리다이렉트 (useEffect에서 처리됨)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      setError(error.message || '로그인에 실패했습니다.')
+      setError(error instanceof Error ? error.message : '로그인에 실패했습니다.')
     } finally {
       setLoading(false)
     }
