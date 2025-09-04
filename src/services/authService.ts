@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Profile, ProfileInsert } from '@/types/database-generated'
+import type { Profile, ProfileInsert, ProfileUpdate } from '@/types/database-generated'
 
 export interface SignUpData {
   email: string
@@ -64,22 +64,22 @@ export const getCurrentUser = async (): Promise<User | null> => {
 }
 
 // 사용자 프로필 가져오기
-export const getUserProfile = async (userId: string): Promise<Profile | null> => {
+export const getUserProfile = async (userId: string): Promise<Profile | undefined> => {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .single()
 
-  if (error) return null
+  if (error) return undefined
   return data
 }
 
 // 사용자 프로필 업데이트
-export const updateUserProfile = async (userId: string, updates: Partial<ProfileInsert>) => {
+export const updateUserProfile = async (userId: string, updates: ProfileUpdate) => {
   const { data, error } = await supabase
     .from('profiles')
-    .update(updates)
+    .update(updates as any)
     .eq('id', userId)
     .select()
     .single()
@@ -89,14 +89,14 @@ export const updateUserProfile = async (userId: string, updates: Partial<Profile
 }
 
 // 모든 사용자 목록 가져오기 (관리자용)
-export const getAllUsers = async () => {
+export const getAllUsers = async (): Promise<Profile[]> => {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data
+  return data as Profile[]
 }
 
 // 사용자 승인/거절 (마스터 권한 필요)

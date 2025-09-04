@@ -24,7 +24,7 @@ import { getAllUsers, updateUserStatus, updateUserRole, deleteUser } from '@/ser
 interface UserWithProfile {
   id: string
   email: string
-  profile?: {
+  profile: {
     id: string
     email: string
     role: 'master' | 'admin' | 'general'
@@ -56,10 +56,14 @@ export default function UsersPage() {
       const usersWithProfiles = data.map(profile => ({
         id: profile.id,
         email: profile.email,
-        profile: profile,
+        profile: {
+          ...profile,
+          role: profile.role as 'master' | 'admin' | 'general',
+          status: profile.status as 'pending' | 'approved' | 'rejected'
+        },
       }))
       setUsers(usersWithProfiles)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load users:', error)
       setError('사용자를 불러오는데 실패했습니다.')
     } finally {
@@ -83,11 +87,11 @@ export default function UsersPage() {
           ? { ...user, profile: { ...user.profile!, status: newStatus } }
           : user
       ))
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update user status:', error)
       toast({
         title: '상태 변경 실패',
-        description: error.message || '사용자 상태 변경 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '사용자 상태 변경 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {
@@ -111,11 +115,11 @@ export default function UsersPage() {
           ? { ...user, profile: { ...user.profile!, role: newRole } }
           : user
       ))
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update user role:', error)
       toast({
         title: '역할 변경 실패',
-        description: error.message || '사용자 역할 변경 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '사용자 역할 변경 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {
@@ -135,11 +139,11 @@ export default function UsersPage() {
 
       // 목록에서 제거
       setUsers(users.filter(user => user.id !== userId))
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete user:', error)
       toast({
         title: '사용자 삭제 실패',
-        description: error.message || '사용자 삭제 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '사용자 삭제 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {

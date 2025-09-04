@@ -72,7 +72,7 @@ function generateDeploymentReport(logData: any) {
   )
 
   // 환경별 통계
-  const environmentStats = {}
+  const environmentStats: Record<string, { total: number; successful: number; failed: number }> = {}
   deployments.forEach((d: any) => {
     if (!environmentStats[d.environment]) {
       environmentStats[d.environment] = { total: 0, successful: 0, failed: 0 }

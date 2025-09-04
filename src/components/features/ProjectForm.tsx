@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -53,7 +53,7 @@ export default function ProjectForm({ project, onSubmit, onCancel, loading = fal
       cover_image_url: project?.cover_image_url || '',
       year: project?.year || undefined,
       area: project?.area || undefined,
-      status: project?.status || 'draft',
+      status: (project?.status as 'draft' | 'published' | 'hidden') || 'draft',
     },
   })
 

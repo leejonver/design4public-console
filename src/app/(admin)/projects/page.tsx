@@ -61,7 +61,7 @@ export default function ProjectsPage() {
       console.error('Failed to delete project:', error)
       toast({
         title: '프로젝트 삭제 실패',
-        description: error.message || '프로젝트 삭제 중 오류가 발생했습니다.',
+        description: error instanceof Error ? error.message : '프로젝트 삭제 중 오류가 발생했습니다.',
         variant: 'destructive',
       })
     } finally {
