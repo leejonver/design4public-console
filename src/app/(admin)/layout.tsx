@@ -40,22 +40,28 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     console.log('Admin layout useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status, pathname })
 
-    if (!loading && !user) {
+    // 로딩 중이면 아무것도 하지 않음
+    if (loading) {
+      console.log('Admin layout: Still loading, waiting...')
+      return
+    }
+
+    if (!user) {
       console.log('Admin layout: No user, redirecting to login')
       router.push('/login?redirectTo=' + encodeURIComponent(pathname))
       return
     }
 
-    if (!loading && user && user?.profile?.status !== 'approved') {
+    if (user?.profile?.status !== 'approved') {
       console.log('Admin layout: User not approved, status:', user?.profile?.status)
       router.push('/login?error=unauthorized')
       return
     }
 
-    if (!loading && user && user?.profile?.status === 'approved') {
+    if (user?.profile?.status === 'approved') {
       console.log('Admin layout: User approved, proceeding')
     }
-  }, [user, loading]) // pathname과 router 제거하여 무한 루프 방지
+  }, [user, loading, pathname]) // pathname 다시 추가
 
   if (loading) {
     return (
