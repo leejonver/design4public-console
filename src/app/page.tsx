@@ -1,217 +1,115 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
-import { Loader2, Shield } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Eye, EyeOff } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import Link from 'next/link'
-import { useState } from 'react'
-import { signIn } from '@/services/authService'
+import { supabase } from '@/lib/supabase'
 
 export default function HomePage() {
-  const { user, loading, updateUserAfterSignIn } = useAuth()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loadingLogin, setLoadingLogin] = useState(false)
-  const [error, setError] = useState('')
-  const [hasRedirected, setHasRedirected] = useState(false)
-
-  // 즉시 리다이렉트 체크 - 컴포넌트 마운트 시 즉시 실행
-  useEffect(() => {
-    console.log('Main page mounted - immediate check:', { loading, user: !!user, profileStatus: user?.profile?.status })
-    
-    // 즉시 리다이렉트 체크
-    if (!loading && user && !hasRedirected) {
-      console.log('Immediate redirect: User found, redirecting to dashboard')
-      setHasRedirected(true)
-      window.location.href = '/dashboard'
-      return
-    }
-  }, []) // 마운트 시 한 번만 실행
-
-  // Auth 상태 변경 감지 - 별도 useEffect로 강제 실행
-  useEffect(() => {
-    console.log('Auth state change detected:', { loading, user: !!user, profileStatus: user?.profile?.status, hasRedirected })
-    
-    if (!loading && user && !hasRedirected) {
-      console.log('Auth state redirect: User found, redirecting to dashboard')
-      setHasRedirected(true)
-      
-      // 강제 리다이렉트 - window.location.href만 사용
-      console.log('Force redirecting to dashboard...')
-      window.location.href = '/dashboard'
-    }
-  }, [loading, user, hasRedirected]) // router 제거
 
   useEffect(() => {
-    console.log('Main page useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status })
+    checkUser()
+  }, [])
 
-    if (!loading && user && !hasRedirected) {
-      console.log('Main page: User found, redirecting to dashboard')
-      setHasRedirected(true)
-      
-      // 로그인된 경우 대시보드로 리다이렉트
-      try {
-        router.replace('/dashboard')
-        // 만약 router.replace가 작동하지 않으면 강제 리다이렉트
-        setTimeout(() => {
-          if (window.location.pathname === '/') {
-            console.log('Router replace failed, using window.location')
-            window.location.href = '/dashboard'
-          }
-        }, 100)
-      } catch (error) {
-        console.error('Router redirect failed:', error)
-        window.location.href = '/dashboard'
+  const checkUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUser(session.user)
+        router.push('/dashboard')
+      } else {
+        setLoading(false)
       }
-    } else if (!loading && !user) {
-      console.log('Main page: No user, showing login form')
-    } else if (loading) {
-      console.log('Main page: Still loading...')
+    } catch (error) {
+      console.error('Error checking user:', error)
+      setLoading(false)
     }
-  }, [user, loading, router, hasRedirected]) // hasRedirected 추가
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setLoadingLogin(true)
-    setError('')
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
 
     try {
-      await signIn({ email, password })
-      // 로그인 성공 후 사용자 정보 수동 업데이트
-      await updateUserAfterSignIn()
-      console.log('Login successful, user info updated')
-    } catch (error: unknown) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        alert('로그인 실패: ' + error.message)
+        return
+      }
+
+      if (data.user) {
+        setUser(data.user)
+        router.push('/dashboard')
+      }
+    } catch (error) {
       console.error('Login error:', error)
-      setError(error instanceof Error ? error.message : '로그인에 실패했습니다.')
-    } finally {
-      setLoadingLogin(false)
+      alert('로그인 중 오류가 발생했습니다.')
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">로딩 중...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">로딩 중...</p>
         </div>
       </div>
     )
   }
 
-  if (user) {
-    // 로그인된 경우 잠시 로딩 표시 후 대시보드로 리다이렉트
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">대시보드로 이동 중...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // 로그인되지 않은 경우 간단한 로그인 페이지 표시
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-1">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Shield className="h-10 w-10 text-primary" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Design4Public Console</h1>
+          <p className="mt-2 text-gray-600">관리자 로그인</p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              이메일
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="design4public@gmail.com"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">
-            Design4Public Console
-          </CardTitle>
-          <CardDescription>
-            콘텐츠 관리 시스템
-          </CardDescription>
-        </CardHeader>
-
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">비밀번호</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="비밀번호를 입력하세요"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-
-          <CardContent className="pt-0">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loadingLogin}
-            >
-              {loadingLogin ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  로그인 중...
-                </>
-              ) : (
-                '로그인'
-              )}
-            </Button>
-          </CardContent>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              비밀번호
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            로그인
+          </button>
         </form>
-
-        <CardContent className="pt-0">
-          <div className="text-center text-sm">
-            계정이 없으신가요?{' '}
-            <Link href="/signup" className="text-primary hover:underline">
-              회원가입
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }
