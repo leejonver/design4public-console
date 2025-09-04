@@ -43,7 +43,7 @@ export default function DashboardPage() {
       brands: 5,
       users: 1,
     })
-  }, [user, loading, router])
+  }, [user, loading]) // router 제거하여 무한 루프 방지
 
   const handleSignOut = async () => {
     try {
