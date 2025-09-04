@@ -11,6 +11,7 @@ interface AuthContextType {
   loading: boolean
   signOut: () => Promise<void>
   refreshUser: () => Promise<void>
+  updateUserAfterSignIn: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,8 +25,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false)
-  const [authEvent, setAuthEvent] = useState<{ event: string; session: Session | null } | null>(null)
 
   // 사용자 정보 새로고침
   const refreshUser = async () => {
@@ -38,29 +37,111 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  // 로그인 후 사용자 정보 수동 업데이트
+  const updateUserAfterSignIn = async () => {
+    try {
+      console.log('Updating user after sign in...')
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Failed to get session after sign in:', error)
+        return
+      }
+
+      if (session?.user) {
+        setSession(session)
+
+        // 임시 사용자 설정
+        const tempUser = {
+          id: session.user.id,
+          email: session.user.email || '',
+          profile: undefined
+        }
+        setUser(tempUser)
+
+        // 프로필 로딩
+        try {
+          const currentUser = await getCurrentUser()
+          if (currentUser) {
+            setUser(currentUser)
+            console.log('User updated after sign in successfully')
+          }
+        } catch (error) {
+          console.error('Failed to load profile after sign in:', error)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update user after sign in:', error)
+    }
+  }
+
   // 로그아웃
   const signOut = async () => {
     try {
       await supabase.auth.signOut()
       setUser(null)
       setSession(null)
+      setIsInitialized(true) // 로그아웃 후에도 초기화 상태 유지
+      console.log('User signed out successfully')
     } catch (error) {
       console.error('Failed to sign out:', error)
     }
   }
 
-  // 초기 로드 및 세션 변경 감지
+  // 초기 로드 - 수동 세션 관리 (이벤트 기반이 아닌 직접 관리)
   useEffect(() => {
     let mounted = true
 
-    // 초기 세션 확인을 위한 이벤트 트리거
     const initializeAuth = async () => {
+      if (!mounted) return
+
       try {
-        console.log('Initializing: Getting initial session...')
-        // 이 호출이 INITIAL_SESSION 이벤트를 트리거하지만, 우리는 그걸 무시할 것임
-        await supabase.auth.getSession()
+        console.log('Initializing: Getting session manually...')
+
+        // 수동으로 세션 확인
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('Failed to get session:', error)
+          if (mounted) {
+            setIsInitialized(true)
+            setLoading(false)
+          }
+          return
+        }
+
+        if (mounted) {
+          setSession(session)
+
+          if (session?.user) {
+            console.log('Initializing: Loading user from session...')
+            // 임시 사용자 설정
+            const tempUser = {
+              id: session.user.id,
+              email: session.user.email || '',
+              profile: undefined
+            }
+            setUser(tempUser)
+
+            // 프로필 로딩
+            try {
+              const currentUser = await getCurrentUser()
+              if (currentUser && mounted) {
+                setUser(currentUser)
+                console.log('Initializing: Profile loaded successfully')
+              }
+            } catch (error) {
+              console.error('Failed to load profile:', error)
+              // 프로필 로드 실패해도 임시 사용자는 유지
+            }
+          }
+
+          setIsInitialized(true)
+          setLoading(false)
+          console.log('Initializing: Complete')
+        }
       } catch (error) {
-        console.error('Failed to trigger initial session:', error)
+        console.error('Failed to initialize auth:', error)
         if (mounted) {
           setIsInitialized(true)
           setLoading(false)
@@ -69,140 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     initializeAuth()
-
-    // 세션 변경 감지 - 이벤트만 저장하고 실제 처리는 별도 useEffect에서
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
-
-      console.log('Auth state changed:', event, session?.user?.email)
-
-      // 이벤트 정보를 저장하고 실제 처리는 별도 useEffect에서 수행
-      setAuthEvent({ event, session })
-    })
-
-    // 이벤트 처리 useEffect - 이벤트가 변경될 때만 실행
-    useEffect(() => {
-      if (!authEvent || !mounted) return
-
-      const { event, session: newSession } = authEvent
-      console.log('Processing auth event:', event)
-
-      // 이벤트 처리 후 즉시 이벤트 초기화 (무한 루프 방지)
-      setAuthEvent(null)
-
-      // INITIAL_SESSION 이벤트 처리
-      if (event === 'INITIAL_SESSION') {
-        console.log('Processing: Handling INITIAL_SESSION event')
-        setSession(newSession)
-
-        if (newSession?.user && !isInitialized) {
-          console.log('Processing: Loading user from INITIAL_SESSION')
-          // 임시 사용자 설정
-          const tempUser = {
-            id: newSession.user.id,
-            email: newSession.user.email || '',
-            profile: undefined
-          }
-          setUser(tempUser)
-
-          // 프로필 로딩 시작
-          if (!isLoadingProfile) {
-            setIsLoadingProfile(true)
-            setTimeout(async () => {
-              if (!mounted) return
-              try {
-                console.log('Background: Loading profile from INITIAL_SESSION...')
-                const currentUser = await getCurrentUser()
-                if (currentUser && mounted) {
-                  setUser(currentUser)
-                  setIsInitialized(true)
-                  console.log('Background: Profile loading completed from INITIAL_SESSION')
-                }
-              } catch (error) {
-                console.error('Background: Failed to load profile from INITIAL_SESSION:', error)
-                if (mounted) {
-                  setIsInitialized(true)
-                }
-              } finally {
-                if (mounted) {
-                  setIsLoadingProfile(false)
-                  setLoading(false)
-                }
-              }
-            }, 100)
-          }
-        } else if (!newSession?.user) {
-          setIsInitialized(true)
-          setLoading(false)
-        }
-        return
-      }
-
-      // SIGNED_IN 이벤트 처리
-      if (event === 'SIGNED_IN' && newSession?.user) {
-        console.log('Processing: Handling SIGNED_IN event')
-
-        // 세션이 변경되었거나 초기화되지 않은 경우에만 처리
-        if (!isInitialized || newSession.user.id !== user?.id) {
-          // 임시 사용자 설정
-          const tempUser = {
-            id: newSession.user.id,
-            email: newSession.user.email || '',
-            profile: undefined
-          }
-          setUser(tempUser)
-          setSession(newSession)
-
-          // 프로필 로딩 시작
-          if (!isLoadingProfile) {
-            setIsLoadingProfile(true)
-            setTimeout(async () => {
-              if (!mounted) return
-              try {
-                console.log('Background: Loading profile from SIGNED_IN...')
-                const currentUser = await getCurrentUser()
-                if (currentUser && mounted) {
-                  setUser(currentUser)
-                  setIsInitialized(true)
-                  console.log('Background: Profile loading completed from SIGNED_IN')
-                }
-              } catch (error) {
-                console.error('Background: Failed to load profile from SIGNED_IN:', error)
-                if (mounted) {
-                  setIsInitialized(true)
-                }
-              } finally {
-                if (mounted) {
-                  setIsLoadingProfile(false)
-                  setLoading(false)
-                }
-              }
-            }, 100)
-          }
-        }
-        return
-      }
-
-      // SIGNED_OUT 이벤트 처리
-      if (event === 'SIGNED_OUT') {
-        console.log('Processing: Handling SIGNED_OUT event')
-        setUser(null)
-        setSession(null)
-        setIsInitialized(true)
-        setLoading(false)
-        setIsLoadingProfile(false)
-        return
-      }
-
-    }, [authEvent]) // authEvent만 의존성으로 설정하여 무한 루프 방지
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, []) // 초기화 시에만 실행
+  }, []) // 한 번만 실행
 
   const value: AuthContextType = {
     user,
@@ -210,6 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     signOut,
     refreshUser,
+    updateUserAfterSignIn,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

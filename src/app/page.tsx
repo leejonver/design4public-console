@@ -15,7 +15,7 @@ import { useState } from 'react'
 import { signIn } from '@/services/authService'
 
 export default function HomePage() {
-  const { user, loading } = useAuth()
+  const { user, loading, updateUserAfterSignIn } = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,7 +44,9 @@ export default function HomePage() {
 
     try {
       await signIn({ email, password })
-      // 로그인 성공 시 useEffect에서 리다이렉트 처리됨
+      // 로그인 성공 후 사용자 정보 수동 업데이트
+      await updateUserAfterSignIn()
+      console.log('Login successful, user info updated')
     } catch (error: unknown) {
       console.error('Login error:', error)
       setError(error instanceof Error ? error.message : '로그인에 실패했습니다.')
