@@ -1,9 +1,12 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileText, Package, Tag, Users, LogOut, User } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const { user, signOut, loading } = useAuth()
@@ -188,28 +191,28 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <Button className="w-full justify-start hover:bg-primary/5" variant="outline" asChild>
-              <a href="/projects/new">
+              <Link href="/projects/new">
                 <FileText className="mr-2 h-4 w-4" />
                 새 프로젝트 추가
-              </a>
+              </Link>
             </Button>
             <Button className="w-full justify-start hover:bg-primary/5" variant="outline" asChild>
-              <a href="/items/new">
+              <Link href="/items/new">
                 <Package className="mr-2 h-4 w-4" />
                 새 아이템 추가
-              </a>
+              </Link>
             </Button>
             <Button className="w-full justify-start hover:bg-primary/5" variant="outline" asChild>
-              <a href="/brands/new">
+              <Link href="/brands/new">
                 <Tag className="mr-2 h-4 w-4" />
                 새 브랜드 추가
-              </a>
+              </Link>
             </Button>
             <Button className="w-full justify-start hover:bg-primary/5" variant="outline" asChild>
-              <a href="/tags/new">
+              <Link href="/tags/new">
                 <Tag className="mr-2 h-4 w-4" />
                 새 태그 추가
-              </a>
+              </Link>
             </Button>
           </CardContent>
         </Card>

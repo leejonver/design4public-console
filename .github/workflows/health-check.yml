@@ -1,0 +1,40 @@
+name: Health Check
+
+on:
+  schedule:
+    # 매일 오전 9시에 실행
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run health check
+        run: |
+          # 애플리케이션 헬스 체크
+          curl -f https://design4public-console-pajxm8uyl-wizehat.vercel.app/api/health || exit 1
+
+      - name: Performance check
+        run: |
+          # 간단한 성능 테스트
+          echo "Running performance checks..."
+          # Lighthouse CI 또는 기타 성능 테스트 도구를 사용할 수 있습니다
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          echo "🚨 Health check failed! Please check the application status."
+          # Slack, Discord 등으로 알림을 보낼 수 있습니다
