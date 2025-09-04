@@ -22,12 +22,15 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loadingLogin, setLoadingLogin] = useState(false)
   const [error, setError] = useState('')
+  const [hasRedirected, setHasRedirected] = useState(false)
 
   useEffect(() => {
     console.log('Main page useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status })
 
-    if (!loading && user) {
+    if (!loading && user && !hasRedirected) {
       console.log('Main page: User found, redirecting to dashboard')
+      setHasRedirected(true)
+      
       // 로그인된 경우 대시보드로 리다이렉트
       try {
         router.replace('/dashboard')
@@ -47,7 +50,7 @@ export default function HomePage() {
     } else if (loading) {
       console.log('Main page: Still loading...')
     }
-  }, [user, loading]) // router 제거하여 불필요한 재실행 방지
+  }, [user, loading, router, hasRedirected]) // hasRedirected 추가
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
