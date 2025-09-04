@@ -1,0 +1,428 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Project Setup and Configuration",
+        "description": "Initialize the Next.js project with TypeScript and Tailwind CSS, configure Supabase client, and set up the deployment pipeline with Vercel.",
+        "details": "1. Create a new Next.js project with TypeScript:\n```bash\nnpx create-next-app@latest console.design4public.com --typescript --tailwind --eslint\n```\n2. Set up Supabase client in `src/lib/supabaseClient.ts`:\n```typescript\nimport { createClient } from '@supabase/supabase-js';\nimport { Database } from '@/types/database';\n\nconst supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;\nconst supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;\n\nexport const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);\n```\n3. Configure environment variables in `.env.local`\n4. Set up Vercel deployment and connect to GitHub repository\n5. Install additional dependencies:\n```bash\nnpm install @supabase/auth-helpers-nextjs lucide-react react-hook-form zod @hookform/resolvers/zod\n```",
+        "testStrategy": "1. Verify the project builds without errors\n2. Confirm Supabase connection works by testing a simple query\n3. Test Vercel deployment pipeline by pushing a simple change\n4. Validate environment variables are correctly loaded",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Database Schema Implementation",
+        "description": "Create all required database tables and relationships in Supabase according to the schema specifications.",
+        "details": "1. Create the following tables in Supabase:\n   - `profiles` (linked to auth.users)\n   - `projects`\n   - `items`\n   - `brands`\n   - `tags`\n   - `project_images`\n   - Junction tables: `project_items`, `project_tags`, `image_tags`\n\n2. Set up RLS (Row Level Security) policies for each table\n\n3. Example SQL for profiles table:\n```sql\nCREATE TABLE profiles (\n  id UUID PRIMARY KEY REFERENCES auth.users(id),\n  email TEXT NOT NULL UNIQUE,\n  role TEXT NOT NULL CHECK (role IN ('master', 'admin', 'general')),\n  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected'))\n);\n```\n\n4. Generate TypeScript types using Supabase CLI:\n```bash\nnpx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.ts\n```",
+        "testStrategy": "1. Verify all tables are created with correct columns and constraints\n2. Test foreign key relationships by inserting test data\n3. Validate RLS policies by testing access with different user roles\n4. Confirm TypeScript types are correctly generated",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Core Tables Creation",
+            "description": "Create the primary tables in the database schema: profiles, projects, and items.",
+            "dependencies": [],
+            "details": "```sql\n-- Profiles table (linked to auth.users)\nCREATE TABLE profiles (\n  id UUID PRIMARY KEY REFERENCES auth.users(id),\n  email TEXT NOT NULL UNIQUE,\n  role TEXT NOT NULL CHECK (role IN ('master', 'admin', 'general')),\n  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\n-- Projects table\nCREATE TABLE projects (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  title TEXT NOT NULL,\n  description TEXT,\n  status TEXT NOT NULL CHECK (status IN ('draft', 'published', 'hidden')),\n  created_by UUID REFERENCES profiles(id),\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\n-- Items table\nCREATE TABLE items (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  name TEXT NOT NULL,\n  description TEXT,\n  nara_url TEXT,\n  created_by UUID REFERENCES profiles(id),\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n```",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Secondary Tables Creation",
+            "description": "Create the secondary tables in the database schema: brands, tags, and project_images.",
+            "dependencies": [],
+            "details": "```sql\n-- Brands table\nCREATE TABLE brands (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  name TEXT NOT NULL UNIQUE,\n  description TEXT,\n  website_url TEXT,\n  image_url TEXT,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\n-- Add brand_id to items table\nALTER TABLE items ADD COLUMN brand_id UUID REFERENCES brands(id);\n\n-- Tags table\nCREATE TABLE tags (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  name TEXT NOT NULL UNIQUE,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\n-- Project_images table\nCREATE TABLE project_images (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,\n  image_url TEXT NOT NULL,\n  display_order INTEGER NOT NULL,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n```",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Junction Tables and Relationships Setup",
+            "description": "Create junction tables to establish many-to-many relationships between entities.",
+            "dependencies": [],
+            "details": "```sql\n-- Junction table for projects and items\nCREATE TABLE project_items (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,\n  item_id UUID REFERENCES items(id) ON DELETE CASCADE,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  UNIQUE(project_id, item_id)\n);\n\n-- Junction table for projects and tags\nCREATE TABLE project_tags (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,\n  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  UNIQUE(project_id, tag_id)\n);\n\n-- Junction table for images and tags\nCREATE TABLE image_tags (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  image_id UUID REFERENCES project_images(id) ON DELETE CASCADE,\n  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  UNIQUE(image_id, tag_id)\n);\n\n-- Create indexes for better query performance\nCREATE INDEX idx_project_items_project_id ON project_items(project_id);\nCREATE INDEX idx_project_items_item_id ON project_items(item_id);\nCREATE INDEX idx_project_tags_project_id ON project_tags(project_id);\nCREATE INDEX idx_project_tags_tag_id ON project_tags(tag_id);\nCREATE INDEX idx_image_tags_image_id ON image_tags(image_id);\nCREATE INDEX idx_image_tags_tag_id ON image_tags(tag_id);\n```",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Row Level Security Policies Implementation",
+            "description": "Set up Row Level Security (RLS) policies for each table to control access based on user roles.",
+            "dependencies": [],
+            "details": "```sql\n-- Enable Row Level Security on all tables\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;\nALTER TABLE projects ENABLE ROW LEVEL SECURITY;\nALTER TABLE items ENABLE ROW LEVEL SECURITY;\nALTER TABLE brands ENABLE ROW LEVEL SECURITY;\nALTER TABLE tags ENABLE ROW LEVEL SECURITY;\nALTER TABLE project_images ENABLE ROW LEVEL SECURITY;\nALTER TABLE project_items ENABLE ROW LEVEL SECURITY;\nALTER TABLE project_tags ENABLE ROW LEVEL SECURITY;\nALTER TABLE image_tags ENABLE ROW LEVEL SECURITY;\n\n-- Profiles table policies\nCREATE POLICY \"Users can view their own profile\" ON profiles\n  FOR SELECT USING (auth.uid() = id);\nCREATE POLICY \"Admin users can view all profiles\" ON profiles\n  FOR SELECT USING (auth.jwt() ->> 'role' IN ('master', 'admin'));\nCREATE POLICY \"Admin users can update profiles\" ON profiles\n  FOR UPDATE USING (auth.jwt() ->> 'role' IN ('master', 'admin'));\n\n-- Projects table policies\nCREATE POLICY \"Published projects are viewable by all users\" ON projects\n  FOR SELECT USING (status = 'published');\nCREATE POLICY \"Users can view their own projects\" ON projects\n  FOR SELECT USING (auth.uid() = created_by);\nCREATE POLICY \"Admin users can view all projects\" ON projects\n  FOR SELECT USING (auth.jwt() ->> 'role' IN ('master', 'admin'));\nCREATE POLICY \"Users can insert their own projects\" ON projects\n  FOR INSERT WITH CHECK (auth.uid() = created_by);\nCREATE POLICY \"Users can update their own projects\" ON projects\n  FOR UPDATE USING (auth.uid() = created_by);\nCREATE POLICY \"Admin users can update all projects\" ON projects\n  FOR UPDATE USING (auth.jwt() ->> 'role' IN ('master', 'admin'));\nCREATE POLICY \"Users can delete their own projects\" ON projects\n  FOR DELETE USING (auth.uid() = created_by);\nCREATE POLICY \"Admin users can delete all projects\" ON projects\n  FOR DELETE USING (auth.jwt() ->> 'role' IN ('master', 'admin'));\n\n-- Similar policies for other tables (items, brands, tags, etc.)\n-- Add policies for junction tables to maintain referential integrity\n```",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "TypeScript Type Generation and Validation",
+            "description": "Generate TypeScript types from the database schema and validate the type definitions.",
+            "dependencies": [],
+            "details": "1. Install the Supabase CLI if not already installed:\n```bash\nnpm install -g supabase\n```\n\n2. Login to Supabase CLI:\n```bash\nsupabase login\n```\n\n3. Generate TypeScript types from the database schema:\n```bash\nnpx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.ts\n```\n\n4. Create custom type definitions for form inputs and API responses:\n```typescript\n// src/types/schema.ts\nimport { Database } from './database';\n\n// Table row types\nexport type Profile = Database['public']['Tables']['profiles']['Row'];\nexport type Project = Database['public']['Tables']['projects']['Row'];\nexport type Item = Database['public']['Tables']['items']['Row'];\nexport type Brand = Database['public']['Tables']['brands']['Row'];\nexport type Tag = Database['public']['Tables']['tags']['Row'];\nexport type ProjectImage = Database['public']['Tables']['project_images']['Row'];\n\n// Input types for forms\nexport type ProjectInput = Omit<Project, 'id' | 'created_at' | 'updated_at' | 'created_by'> & {\n  tags?: string[];\n  items?: string[];\n};\n\nexport type ItemInput = Omit<Item, 'id' | 'created_at' | 'updated_at' | 'created_by'>;\n\nexport type BrandInput = Omit<Brand, 'id' | 'created_at' | 'updated_at'>;\n\nexport type TagInput = Omit<Tag, 'id' | 'created_at' | 'updated_at'>;\n```\n\n5. Validate the generated types by creating a simple test file:\n```typescript\n// src/tests/types.test.ts\nimport { Project, Item, Brand, Tag } from '../types/schema';\n\n// This file doesn't need to be executed, just type-checked\nconst testTypes = () => {\n  const project: Project = {\n    id: '123e4567-e89b-12d3-a456-426614174000',\n    title: 'Test Project',\n    description: 'A test project',\n    status: 'draft',\n    created_by: '123e4567-e89b-12d3-a456-426614174001',\n    created_at: new Date().toISOString(),\n    updated_at: new Date().toISOString()\n  };\n  \n  console.log(project);\n};\n```",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Authentication System Implementation",
+        "description": "Implement user authentication flow including signup, email verification, login, and role-based access control.",
+        "details": "1. Create authentication pages in `src/app/(auth)/`:\n   - `login/page.tsx`\n   - `signup/page.tsx`\n\n2. Implement signup form with email/password:\n```typescript\n// Form component with react-hook-form\nconst SignupForm = () => {\n  const { register, handleSubmit } = useForm();\n  \n  const onSubmit = async (data) => {\n    const { error } = await supabase.auth.signUp({\n      email: data.email,\n      password: data.password,\n    });\n    \n    if (!error) {\n      // Also create entry in profiles table with 'pending' status\n      await supabase.from('profiles').insert({\n        id: user.id,\n        email: data.email,\n        role: 'general',\n        status: 'pending'\n      });\n    }\n  };\n  \n  return (\n    <form onSubmit={handleSubmit(onSubmit)}>\n      {/* Form fields */}\n    </form>\n  );\n};\n```\n\n3. Implement login functionality with status check\n4. Create middleware to protect routes based on authentication and role\n5. Implement user context provider for global auth state",
+        "testStrategy": "1. Test signup flow and verify email verification works\n2. Test login with valid and invalid credentials\n3. Verify pending users cannot access protected routes\n4. Test role-based access control for different user types\n5. Verify logout functionality",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Signup Page and Form Implementation",
+            "description": "Create the signup page and implement the form with email/password registration using Supabase authentication.",
+            "dependencies": [],
+            "details": "1. Create `src/app/(auth)/signup/page.tsx`\n2. Implement SignupForm component with react-hook-form\n3. Add form validation for email and password fields\n4. Implement Supabase auth.signUp integration\n5. Add error handling and success messaging\n6. Create initial entry in profiles table with 'pending' status\n7. Implement redirect after successful signup\n8. Add UI components for form fields, buttons, and loading states",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Login Page and Form Implementation",
+            "description": "Create the login page and implement the form with email/password authentication using Supabase.",
+            "dependencies": [],
+            "details": "1. Create `src/app/(auth)/login/page.tsx`\n2. Implement LoginForm component with react-hook-form\n3. Add form validation for email and password fields\n4. Implement Supabase auth.signInWithPassword integration\n5. Add error handling for invalid credentials\n6. Check user status from profiles table before allowing login\n7. Implement redirect after successful login\n8. Add 'Forgot Password' link and functionality",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Email Verification Flow",
+            "description": "Implement the email verification process for new user signups, including verification page and status updates.",
+            "dependencies": [],
+            "details": "1. Create `src/app/(auth)/verify/page.tsx` for email verification confirmation\n2. Implement verification token handling from email links\n3. Update user status in profiles table from 'pending' to 'active' upon verification\n4. Create email templates for verification emails\n5. Add resend verification email functionality\n6. Implement verification expiry handling\n7. Add success/error messaging for verification process",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "User Profile Creation and Status Management",
+            "description": "Implement the user profile management system including profile creation during signup and status updates.",
+            "dependencies": [],
+            "details": "1. Create database triggers for synchronizing auth.users with profiles table\n2. Implement profile service in `src/services/profileService.ts`\n3. Add functions to update user status (pending, active, suspended)\n4. Create admin interface for managing user statuses\n5. Implement profile data retrieval functions\n6. Add profile completion percentage calculation\n7. Create user profile edit page for users to update their information",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Authentication Middleware for Route Protection",
+            "description": "Implement middleware to protect routes based on authentication status and redirect unauthenticated users.",
+            "dependencies": [],
+            "details": "1. Create `src/middleware.ts` for Next.js middleware implementation\n2. Add authentication checking logic using Supabase auth\n3. Implement route protection for admin and authenticated user routes\n4. Add redirect logic for unauthenticated users to login page\n5. Implement session refreshing mechanism\n6. Add public route allowlist\n7. Create loading states during authentication checks\n8. Implement caching strategy for frequent auth checks",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Role-Based Access Control Implementation",
+            "description": "Implement role-based access control to restrict access to features and routes based on user roles.",
+            "dependencies": [],
+            "details": "1. Extend middleware to check user roles from profiles table\n2. Create role-based route protection (master, admin, general users)\n3. Implement UI conditional rendering based on user roles\n4. Create `useAuthorization` hook for component-level permissions\n5. Add role assignment functionality for admin users\n6. Implement role-based API endpoint protection\n7. Create error pages for unauthorized access attempts\n8. Add audit logging for permission-related actions",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Common Layout and Navigation",
+        "description": "Create the common layout with side navigation and header components that will be used across all admin pages.",
+        "details": "1. Create layout component in `src/app/(admin)/layout.tsx`:\n```typescript\nexport default function AdminLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <div className=\"flex h-screen\">\n      <SideNavigation />\n      <div className=\"flex-1 overflow-auto\">\n        <Header />\n        <main className=\"p-6\">{children}</main>\n      </div>\n    </div>\n  );\n}\n```\n\n2. Implement `SideNavigation` component with links to all sections:\n   - Projects\n   - Items\n   - Brands\n   - Tags\n   - User Management (visible only to master role)\n\n3. Implement `Header` component with user info and logout button\n\n4. Create reusable UI components in `src/components/ui/`:\n   - Button\n   - Input\n   - Select\n   - Modal\n   - etc.\n\n5. Apply the color palette and typography from the design guide",
+        "testStrategy": "1. Verify layout renders correctly on different screen sizes\n2. Test navigation links work and highlight active page\n3. Confirm conditional rendering based on user role\n4. Test logout functionality in header\n5. Validate UI components match design specifications",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Project Management Module",
+        "description": "Implement the project management functionality including list view, detail view, and CRUD operations for projects.",
+        "details": "1. Create project service in `src/services/projectService.ts`:\n```typescript\nexport const getProjects = async () => {\n  const { data, error } = await supabase\n    .from('projects')\n    .select('*')\n    .order('created_at', { ascending: false });\n  \n  if (error) throw error;\n  return data;\n};\n\nexport const getProjectById = async (id: string) => {\n  // Implementation\n};\n\nexport const createProject = async (project: ProjectInput) => {\n  // Implementation\n};\n\n// Update and delete functions\n```\n\n2. Create project list page in `src/app/(admin)/projects/page.tsx`\n3. Create project detail/edit page in `src/app/(admin)/projects/[id]/page.tsx`\n4. Create project form component with:\n   - Basic info (title, description, year, area, etc.)\n   - Cover image upload using Supabase storage\n   - Gallery image upload with ordering capability\n   - Tag selection/creation interface\n   - Item selection interface\n5. Implement image tagging functionality for gallery images",
+        "testStrategy": "1. Test project listing with pagination and filtering\n2. Verify all CRUD operations work correctly\n3. Test image upload functionality\n4. Validate form validation and error handling\n5. Test image tagging and ordering functionality\n6. Verify project status changes (draft/published/hidden)",
+        "priority": "high",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Project Service Implementation",
+            "description": "Complete the project service with all CRUD operations in projectService.ts",
+            "dependencies": [],
+            "details": "1. Implement getProjectById() to fetch a single project with its relationships\n2. Implement createProject() with proper validation and error handling\n3. Implement updateProject() function\n4. Implement deleteProject() function with cascade handling\n5. Add specialized queries for filtering projects by status, tags, etc.\n6. Implement functions to manage project relationships with tags and items\n7. Add proper TypeScript interfaces for all function parameters and returns",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Project List Page Implementation",
+            "description": "Create the projects list page with filtering, pagination, and basic actions",
+            "dependencies": [],
+            "details": "1. Create `src/app/(admin)/projects/page.tsx` with server component\n2. Implement client-side DataTable component with columns for title, status, date\n3. Add filtering options for project status and tags\n4. Implement pagination with server-side data fetching\n5. Add quick actions (edit, delete, duplicate, change status)\n6. Create loading and error states\n7. Add sorting functionality by different columns",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Project Detail/View Page",
+            "description": "Implement the project detail page showing all project information",
+            "dependencies": [],
+            "details": "1. Create `src/app/(admin)/projects/[id]/page.tsx` with dynamic routing\n2. Implement layout with sections for basic info, cover image, gallery\n3. Display related items and tags with links\n4. Add metadata section with creation/update dates\n5. Implement status indicator and quick edit button\n6. Create loading, error and not-found states\n7. Add breadcrumb navigation back to projects list",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Project Create/Edit Form",
+            "description": "Build the form component for creating and editing projects with validation",
+            "dependencies": [],
+            "details": "1. Create ProjectForm component with react-hook-form\n2. Implement form fields for title, description, year, area, status\n3. Add form validation with error messages\n4. Create save/cancel buttons with proper handling\n5. Implement draft saving functionality\n6. Add form submission with loading state\n7. Create reusable form sections for better organization",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Project Cover Image Upload",
+            "description": "Implement cover image upload and management functionality",
+            "dependencies": [],
+            "details": "1. Create ImageUpload component for cover images\n2. Implement Supabase storage integration for image uploads\n3. Add image preview with crop/resize functionality\n4. Implement image deletion and replacement\n5. Add progress indicator during upload\n6. Implement error handling for failed uploads\n7. Add image optimization and responsive sizing",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Project Gallery Management",
+            "description": "Implement gallery image upload with ordering capability",
+            "dependencies": [],
+            "details": "1. Create GalleryManager component for multiple image uploads\n2. Implement drag-and-drop reordering of gallery images\n3. Add batch upload functionality with progress indicators\n4. Create image preview modal with navigation\n5. Implement individual image metadata editing\n6. Add image deletion with confirmation\n7. Implement order saving to database",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Tag and Item Relationship Management",
+            "description": "Implement interfaces for managing project relationships with tags and items",
+            "dependencies": [],
+            "details": "1. Create TagSelector component with search and create functionality\n2. Implement ItemSelector with filtering and pagination\n3. Add selected items/tags display with removal capability\n4. Create interfaces to manage the many-to-many relationships\n5. Implement tag creation during project editing\n6. Add batch operations for adding/removing multiple tags or items\n7. Implement proper state management for relationship changes",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Item Management Module",
+        "description": "Implement the item management functionality including list view, detail view, and CRUD operations for items.",
+        "details": "1. Create item service in `src/services/itemService.ts` with CRUD functions\n2. Create item list page in `src/app/(admin)/items/page.tsx`:\n   - Table view with pagination\n   - Search and filter functionality\n   - 'Add New Item' button\n3. Create item detail/edit page in `src/app/(admin)/items/[id]/page.tsx`\n4. Create item form component with:\n   - Basic info (name, description)\n   - Brand selection dropdown\n   - Nara URL input\n   - Image upload for item\n5. Implement relationship with brands using the brand_id foreign key",
+        "testStrategy": "1. Test item listing with pagination and filtering\n2. Verify all CRUD operations work correctly\n3. Test image upload functionality\n4. Validate form validation and error handling\n5. Test brand selection and relationship",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Brand Management Module",
+        "description": "Implement the brand management functionality including list view, detail view, and CRUD operations for brands.",
+        "details": "1. Create brand service in `src/services/brandService.ts` with CRUD functions\n2. Create brand list page in `src/app/(admin)/brands/page.tsx`:\n   - Table or grid view of brands\n   - 'Add New Brand' button\n3. Create brand detail/edit page in `src/app/(admin)/brands/[id]/page.tsx`\n4. Create brand form component with:\n   - Name and description\n   - Cover image upload\n   - Website URL input\n5. Implement validation to prevent duplicate brand names",
+        "testStrategy": "1. Test brand listing functionality\n2. Verify all CRUD operations work correctly\n3. Test image upload functionality\n4. Validate form validation and error handling\n5. Test unique name constraint",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Tag Management Module",
+        "description": "Implement the tag management functionality including list view and CRUD operations for tags.",
+        "details": "1. Create tag service in `src/services/tagService.ts` with CRUD functions\n2. Create tag management page in `src/app/(admin)/tags/page.tsx`:\n   - List of existing tags\n   - Inline creation/editing capability\n   - Delete confirmation\n3. Create reusable tag selection component for use in projects and images:\n```typescript\nconst TagSelector = ({ selectedTags, onChange }) => {\n  const [tags, setTags] = useState([]);\n  const [inputValue, setInputValue] = useState('');\n  \n  // Load existing tags\n  useEffect(() => {\n    const loadTags = async () => {\n      const data = await getTagsList();\n      setTags(data);\n    };\n    loadTags();\n  }, []);\n  \n  // Handle tag selection/creation\n  // ...\n  \n  return (\n    <div>\n      {/* Tag selection UI */}\n    </div>\n  );\n};\n```\n4. Implement tag relationships for projects and images",
+        "testStrategy": "1. Test tag listing functionality\n2. Verify all CRUD operations work correctly\n3. Test tag selection component in projects and images\n4. Validate unique tag name constraint\n5. Test tag relationships with projects and images",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "User Management Module",
+        "description": "Implement the user management functionality for master users to approve new users and manage roles.",
+        "details": "1. Create user service in `src/services/userService.ts`:\n```typescript\nexport const getUsers = async () => {\n  const { data, error } = await supabase\n    .from('profiles')\n    .select('*')\n    .order('email');\n  \n  if (error) throw error;\n  return data;\n};\n\nexport const updateUserStatus = async (userId: string, status: 'pending' | 'approved' | 'rejected') => {\n  const { error } = await supabase\n    .from('profiles')\n    .update({ status })\n    .eq('id', userId);\n  \n  if (error) throw error;\n  return true;\n};\n\nexport const updateUserRole = async (userId: string, role: 'master' | 'admin' | 'general') => {\n  // Implementation\n};\n```\n2. Create user management page in `src/app/(admin)/users/page.tsx` (accessible only to master role):\n   - Table of users with email, role, status\n   - Status toggle buttons (approve/reject)\n   - Role selection dropdown\n   - Delete user button with confirmation\n3. Implement role-based access control to restrict this page to master users only",
+        "testStrategy": "1. Test user listing functionality\n2. Verify status update operations work correctly\n3. Test role update operations\n4. Validate access control (only master can access)\n5. Test user deletion functionality",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Complete User Service Implementation",
+            "description": "Implement all CRUD operations in the user service including the remaining functions for user management.",
+            "dependencies": [],
+            "details": "1. Complete the `updateUserRole` function in `src/services/userService.ts`\n2. Add `deleteUser` function to handle user removal\n3. Add `getUserById` function to fetch single user details\n4. Implement proper error handling and validation\n5. Add TypeScript interfaces for user types and response formats\n6. Add function to filter users by status or role",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create User List Page with Filtering",
+            "description": "Implement the user management list page with filtering and sorting capabilities.",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "1. Create `src/app/(admin)/users/page.tsx` with responsive table layout\n2. Implement pagination for user list\n3. Add search functionality by email or name\n4. Add filter dropdowns for status and role\n5. Create loading and error states\n6. Implement sorting by different columns\n7. Add refresh functionality to update the list",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement User Status Management",
+            "description": "Create the UI and functionality for master users to approve or reject pending users.",
+            "dependencies": [
+              "9.1",
+              "9.2"
+            ],
+            "details": "1. Create status toggle buttons (approve/reject) in the user list\n2. Implement confirmation dialogs for status changes\n3. Add visual indicators for different user statuses\n4. Create toast notifications for successful/failed status updates\n5. Implement optimistic UI updates for better UX\n6. Add batch approval/rejection functionality for multiple users",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement User Role Management",
+            "description": "Create the UI and functionality for master users to change roles of other users.",
+            "dependencies": [
+              "9.1",
+              "9.2"
+            ],
+            "details": "1. Create role selection dropdown in the user list\n2. Implement confirmation dialog for role changes\n3. Add validation to prevent self-role-demotion\n4. Create toast notifications for successful/failed role updates\n5. Add visual indicators for different user roles\n6. Implement security checks to ensure only master users can change roles\n7. Add help tooltips explaining different role permissions",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Access Control for Master-Only Features",
+            "description": "Add role-based access control to restrict user management features to master users only.",
+            "dependencies": [
+              "9.1",
+              "9.2",
+              "9.3",
+              "9.4"
+            ],
+            "details": "1. Create middleware in `src/middleware.ts` to check user roles\n2. Add route protection for `/users` path\n3. Implement UI conditional rendering based on user role\n4. Create 'Access Denied' page for unauthorized access attempts\n5. Add client-side validation to prevent unauthorized API calls\n6. Implement server-side validation in API routes\n7. Add audit logging for sensitive operations",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Image Upload and Management",
+        "description": "Implement comprehensive image upload, storage, and management functionality for projects, items, and brands.",
+        "details": "1. Create image service in `src/services/imageService.ts`:\n```typescript\nexport const uploadImage = async (file: File, bucket: string, path: string) => {\n  const filename = `${path}/${Date.now()}-${file.name}`;\n  \n  const { data, error } = await supabase.storage\n    .from(bucket)\n    .upload(filename, file);\n  \n  if (error) throw error;\n  \n  const { data: { publicUrl } } = supabase.storage\n    .from(bucket)\n    .getPublicUrl(filename);\n  \n  return publicUrl;\n};\n\nexport const deleteImage = async (bucket: string, path: string) => {\n  // Implementation\n};\n```\n2. Create reusable image upload component in `src/components/features/ImageUploader.tsx`:\n   - Drag and drop support\n   - Preview capability\n   - Progress indicator\n   - Delete functionality\n3. Create gallery management component for project images with:\n   - Reordering capability (drag and drop)\n   - Per-image tagging interface\n   - Bulk upload support\n4. Implement image optimization using Next.js Image component",
+        "testStrategy": "1. Test image upload with various file types and sizes\n2. Verify image deletion works correctly\n3. Test image reordering in galleries\n4. Validate image tagging functionality\n5. Test bulk upload capability\n6. Verify image optimization works correctly",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Image Service Implementation",
+            "description": "Complete the image service with upload and delete operations in src/services/imageService.ts",
+            "dependencies": [],
+            "details": "1. Finish implementing the deleteImage function with proper error handling\n2. Add additional utility functions for image management:\n   - getImagesByPath: to retrieve images from a specific path\n   - getImageMetadata: to retrieve size, dimensions, and other metadata\n3. Implement proper type definitions for all functions\n4. Add comprehensive error handling with specific error types\n5. Include unit tests for all service functions\n6. Add documentation for each function with JSDoc comments",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Reusable Image Uploader Component",
+            "description": "Create a reusable drag-and-drop image upload component in src/components/features/ImageUploader.tsx",
+            "dependencies": [],
+            "details": "1. Component structure:\n   - Container with drop zone functionality\n   - File input with button trigger\n   - Accept only image file types (png, jpg, webp, etc.)\n2. State management:\n   - Track files selected for upload\n   - Track drag state (isDragging) for visual feedback\n3. Implement drag and drop event handlers:\n   - onDragEnter, onDragOver, onDragLeave, onDrop\n4. Add file validation:\n   - File type checking\n   - File size limits\n   - Maximum number of files\n5. Connect to imageService for actual upload functionality\n6. Include proper accessibility attributes and keyboard navigation",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Image Preview and Progress Indicator",
+            "description": "Implement image preview functionality and upload progress indicators for the ImageUploader component",
+            "dependencies": [],
+            "details": "1. Create ImagePreview component:\n   - Display thumbnail of selected image before upload\n   - Show image dimensions and file size\n   - Option to remove from upload queue\n2. Implement progress indicator:\n   - Create ProgressBar component with percentage display\n   - Add upload state tracking (idle, uploading, success, error)\n   - Visual feedback for different states (colors, icons)\n3. Implement cancel upload functionality\n4. Add error display for failed uploads\n5. Optimize preview generation to handle large images efficiently\n6. Ensure responsive design for mobile and desktop views",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Gallery Management with Reordering",
+            "description": "Create a gallery management component with drag-and-drop reordering capability",
+            "dependencies": [],
+            "details": "1. Component structure:\n   - ImageGallery container component in src/components/features/ImageGallery.tsx\n   - Grid layout for images with responsive design\n   - Drag handle indicators for reordering\n2. State management:\n   - Track image order with array of image objects\n   - Persist order changes to database\n3. Implement drag-and-drop reordering:\n   - Use react-beautiful-dnd or similar library\n   - Visual feedback during drag operations\n4. Add bulk upload support:\n   - Multiple file selection\n   - Batch processing with progress tracking\n5. Implement image removal functionality\n6. Add performance optimizations for large galleries (virtualization)",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Image Tagging Interface",
+            "description": "Implement per-image tagging functionality for the gallery management component",
+            "dependencies": [],
+            "details": "1. Create ImageTagging component:\n   - Modal or inline interface for adding/editing tags\n   - Integration with existing Tag Management Module\n   - Support for creating new tags on-the-fly\n2. State management:\n   - Track tags associated with each image\n   - Handle tag addition and removal\n3. Implement tag suggestion functionality:\n   - Show existing tags as user types\n   - Quick-select frequently used tags\n4. Add batch tagging capability for multiple images\n5. Create tag filtering interface for the gallery\n6. Implement tag persistence to database with proper relationships",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Image Optimization Implementation",
+            "description": "Implement image optimization using Next.js Image component and responsive techniques",
+            "dependencies": [],
+            "details": "1. Replace standard img tags with Next.js Image components:\n   - Configure proper sizing and layout properties\n   - Implement responsive sizing with breakpoints\n   - Set appropriate quality settings\n2. Create ImageDisplay component in src/components/ui/ImageDisplay.tsx:\n   - Wrapper around Next.js Image with additional features\n   - Lazy loading implementation\n   - Blur-up placeholder effect\n3. Implement srcset generation for responsive images\n4. Add image format conversion (WebP/AVIF support)\n5. Implement image CDN integration if applicable\n6. Add performance monitoring for image loading metrics",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-09-04T16:26:08.537Z",
+      "updated": "2025-09-04T16:32:32.044Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

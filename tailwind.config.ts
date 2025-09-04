@@ -18,24 +18,54 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // Primary colors from design guide
+        // Polaris-inspired color system
+        teal: {
+          50: '#f6fffe',
+          100: '#e6fefc',
+          200: '#d1fef8',
+          300: '#a7fdf2',
+          400: '#6df7e8',
+          500: '#17d1c9', // Primary teal (Polaris style)
+          600: '#08918d',
+          700: '#0b726f',
+          800: '#0d5d5a',
+          900: '#0f4d4a',
+        },
+
+        // Original primary colors from design guide
         primary: {
           DEFAULT: '#2563EB',
           foreground: '#FFFFFF',
         },
-        // Slate grayscale palette
+
+        // Enhanced slate grayscale palette (Polaris gray)
         slate: {
-          50: '#F8FAFC',
-          100: '#F1F5F9',
-          200: '#E2E8F0',
-          300: '#CBD5E1',
-          400: '#94A3B8',
-          500: '#64748B',
-          600: '#475569',
-          700: '#334155',
-          800: '#1E293B',
-          900: '#0F172A',
-          950: '#020617',
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e5e5',
+          300: '#d4d4d4',
+          400: '#a3a3a3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#262626',
+          900: '#171717',
+          950: '#0a0a0a',
+        },
+
+        // Polaris gray system
+        gray: {
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e5e5',
+          300: '#d4d4d4',
+          400: '#a3a3a3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#262626',
+          900: '#171717',
+          950: '#0a0a0a',
         },
         // Background and foreground
         background: '#FFFFFF',
