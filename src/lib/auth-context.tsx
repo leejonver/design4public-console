@@ -25,6 +25,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
+  const [authEvent, setAuthEvent] = useState<{ event: string; session: Session | null } | null>(null)
 
   // 사용자 정보 새로고침
   const refreshUser = async () => {
@@ -69,7 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     initializeAuth()
 
-    // 세션 변경 감지
+    // 세션 변경 감지 - 이벤트만 저장하고 실제 처리는 별도 useEffect에서
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -77,17 +78,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       console.log('Auth state changed:', event, session?.user?.email)
 
+      // 이벤트 정보를 저장하고 실제 처리는 별도 useEffect에서 수행
+      setAuthEvent({ event, session })
+    })
+
+    // 이벤트 처리 useEffect - 이벤트가 발생할 때마다 실행
+    useEffect(() => {
+      if (!authEvent || !mounted) return
+
+      const { event, session: newSession } = authEvent
+      console.log('Processing auth event:', event)
+
       // INITIAL_SESSION 이벤트 처리
       if (event === 'INITIAL_SESSION') {
-        console.log('Auth state change: Handling INITIAL_SESSION event')
-        setSession(session)
+        console.log('Processing: Handling INITIAL_SESSION event')
+        setSession(newSession)
 
-        if (session?.user && !isInitialized) {
-          console.log('Auth state change: Loading user from INITIAL_SESSION')
+        if (newSession?.user && !isInitialized) {
+          console.log('Processing: Loading user from INITIAL_SESSION')
           // 임시 사용자 설정
           const tempUser = {
-            id: session.user.id,
-            email: session.user.email || '',
+            id: newSession.user.id,
+            email: newSession.user.email || '',
             profile: undefined
           }
           setUser(tempUser)
@@ -118,95 +130,76 @@ export function AuthProvider({ children }: AuthProviderProps) {
               }
             }, 100)
           }
-        } else if (!session?.user) {
+        } else if (!newSession?.user) {
           setIsInitialized(true)
           setLoading(false)
         }
         return
       }
 
-      // 초기화가 완료되었고 세션이 동일하면 무시 (더 엄격한 조건)
-      if (isInitialized && session?.user?.id === user?.id && !isLoadingProfile) {
-        console.log('Auth state change: Ignoring duplicate event')
-        return
-      }
+      // SIGNED_IN 이벤트 처리
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        console.log('Processing: Handling SIGNED_IN event')
 
-      setSession(session)
-
-      if (session?.user) {
-        try {
-          console.log('Auth state change: User found, getting current user...')
-
-          // 임시: Supabase 세션 정보만으로 사용자 객체 생성
+        // 세션이 변경되었거나 초기화되지 않은 경우에만 처리
+        if (!isInitialized || newSession.user.id !== user?.id) {
+          // 임시 사용자 설정
           const tempUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            profile: undefined // 프로필은 나중에 로드
+            id: newSession.user.id,
+            email: newSession.user.email || '',
+            profile: undefined
           }
-
-          console.log('Auth state change: Setting temp user:', tempUser)
           setUser(tempUser)
+          setSession(newSession)
 
-          // 프로필 로딩이 진행 중이 아니고 초기화되지 않은 경우에만 백그라운드 로딩
-          if (!isInitialized && !isLoadingProfile) {
+          // 프로필 로딩 시작
+          if (!isLoadingProfile) {
             setIsLoadingProfile(true)
-
             setTimeout(async () => {
               if (!mounted) return
-
               try {
-                console.log('Background: Loading profile...')
+                console.log('Background: Loading profile from SIGNED_IN...')
                 const currentUser = await getCurrentUser()
-                console.log('Background: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
-
                 if (currentUser && mounted) {
                   setUser(currentUser)
                   setIsInitialized(true)
-                  console.log('Background: Profile loading completed')
-                } else if (mounted) {
-                  setIsInitialized(true)
+                  console.log('Background: Profile loading completed from SIGNED_IN')
                 }
-              } catch (profileError) {
-                console.error('Background: Failed to load profile, keeping temp user:', profileError)
+              } catch (error) {
+                console.error('Background: Failed to load profile from SIGNED_IN:', error)
                 if (mounted) {
                   setIsInitialized(true)
                 }
               } finally {
                 if (mounted) {
                   setIsLoadingProfile(false)
+                  setLoading(false)
                 }
               }
             }, 100)
           }
-        } catch (error) {
-          console.error('Failed to get current user in auth state change:', error)
-          setUser(null)
-          if (mounted) {
-            setIsInitialized(true)
-            setIsLoadingProfile(false)
-          }
         }
-      } else {
-        console.log('Auth state change: No user session')
-        setUser(null)
-        if (mounted) {
-          setIsInitialized(true)
-          setIsLoadingProfile(false)
-        }
+        return
       }
 
-      // 로딩 상태는 초기화 시에만 false로 설정
-      if (!isInitialized) {
-        console.log('Setting loading to false (auth state change)')
+      // SIGNED_OUT 이벤트 처리
+      if (event === 'SIGNED_OUT') {
+        console.log('Processing: Handling SIGNED_OUT event')
+        setUser(null)
+        setSession(null)
+        setIsInitialized(true)
         setLoading(false)
+        setIsLoadingProfile(false)
+        return
       }
-    })
+
+    }, [authEvent, isInitialized, isLoadingProfile, user?.id])
 
     return () => {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [isInitialized]) // isInitialized가 변경될 때만 재실행
+  }, []) // 초기화 시에만 실행
 
   const value: AuthContextType = {
     user,
