@@ -45,21 +45,11 @@ export default function HomePage() {
       console.log('Auth state redirect: User found, redirecting to dashboard')
       setHasRedirected(true)
       
-      // 즉시 리다이렉트 - 여러 방법 시도
-      try {
-        router.replace('/dashboard')
-        setTimeout(() => {
-          if (window.location.pathname === '/') {
-            console.log('Router replace failed, using window.location')
-            window.location.href = '/dashboard'
-          }
-        }, 50)
-      } catch (error) {
-        console.error('Router redirect failed:', error)
-        window.location.href = '/dashboard'
-      }
+      // 강제 리다이렉트 - window.location.href만 사용
+      console.log('Force redirecting to dashboard...')
+      window.location.href = '/dashboard'
     }
-  }, [loading, user, hasRedirected, router]) // router 추가
+  }, [loading, user, hasRedirected]) // router 제거
 
   useEffect(() => {
     console.log('Main page useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status })

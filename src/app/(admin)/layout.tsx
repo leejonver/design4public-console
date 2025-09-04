@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (user.profile.status === 'approved') {
       console.log('Admin layout: User approved, proceeding')
     }
-  }, [user, loading, pathname])
+  }, [user, loading]) // pathname 제거하여 무한 루프 방지
 
   if (loading) {
     return (
