@@ -98,9 +98,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (session?.user) {
         try {
           console.log('Auth state change: User found, getting current user...')
-          const currentUser = await getCurrentUser()
-          console.log('Auth state change: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
-          setUser(currentUser)
+
+          // 임시: Supabase 세션 정보만으로 사용자 객체 생성
+          const tempUser = {
+            id: session.user.id,
+            email: session.user.email || '',
+            profile: undefined // 프로필은 나중에 로드
+          }
+
+          console.log('Auth state change: Setting temp user:', tempUser)
+          setUser(tempUser)
+
+          // 백그라운드에서 프로필 정보 로드 시도
+          try {
+            const currentUser = await getCurrentUser()
+            console.log('Auth state change: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
+            if (currentUser) {
+              setUser(currentUser)
+            }
+          } catch (profileError) {
+            console.error('Failed to load profile, keeping temp user:', profileError)
+            // 프로필 로드 실패해도 임시 사용자는 유지
+          }
         } catch (error) {
           console.error('Failed to get current user in auth state change:', error)
           setUser(null)
