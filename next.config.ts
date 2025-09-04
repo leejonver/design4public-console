@@ -15,15 +15,6 @@ const nextConfig: NextConfig = {
 
   // 빌드 최적화
   experimental: {
-    // Turbopack 사용 (더 빠른 빌드)
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
     // 웹팩 빌드 캐시 비활성화 (Vercel 호환성)
     webpackBuildWorker: false,
   },
