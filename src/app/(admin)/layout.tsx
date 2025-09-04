@@ -38,19 +38,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, loading } = useAuth()
 
   useEffect(() => {
+    console.log('Admin layout useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status, pathname })
+
     if (!loading && !user) {
       console.log('Admin layout: No user, redirecting to login')
       router.push('/login?redirectTo=' + encodeURIComponent(pathname))
       return
     }
 
-    if (user?.profile?.status !== 'approved') {
+    if (!loading && user && user?.profile?.status !== 'approved') {
       console.log('Admin layout: User not approved, status:', user?.profile?.status)
       router.push('/login?error=unauthorized')
       return
     }
 
-    console.log('Admin layout: User approved, proceeding')
+    if (!loading && user && user?.profile?.status === 'approved') {
+      console.log('Admin layout: User approved, proceeding')
+    }
   }, [user, loading, router, pathname])
 
   if (loading) {
