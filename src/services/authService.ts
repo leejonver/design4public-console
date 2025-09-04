@@ -49,17 +49,38 @@ export const signOut = async () => {
 
 // 현재 사용자 정보 가져오기
 export const getCurrentUser = async (): Promise<User | null> => {
-  const { data: { user }, error } = await supabase.auth.getUser()
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (error || !user) return null
+    if (error || !user) {
+      console.log('No authenticated user found')
+      return null
+    }
 
-  // 프로필 정보도 함께 가져오기
-  const profile = await getUserProfile(user.id)
+    console.log('Found authenticated user:', user.email)
 
-  return {
-    id: user.id,
-    email: user.email || '',
-    profile,
+    // 프로필 정보도 함께 가져오기 (에러가 발생해도 사용자 정보는 반환)
+    let profile
+    try {
+      profile = await getUserProfile(user.id)
+      console.log('Profile loaded successfully:', profile ? 'exists' : 'not found')
+    } catch (profileError) {
+      console.error('Failed to load profile, but user exists:', profileError)
+      profile = undefined
+    }
+
+    const userData = {
+      id: user.id,
+      email: user.email || '',
+      profile,
+    }
+
+    console.log('Returning user data:', { id: userData.id, email: userData.email, hasProfile: !!userData.profile })
+
+    return userData
+  } catch (error) {
+    console.error('Critical error in getCurrentUser:', error)
+    return null
   }
 }
 
