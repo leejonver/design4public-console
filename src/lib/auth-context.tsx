@@ -52,50 +52,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let mounted = true
 
+    // 초기 세션 확인을 위한 이벤트 트리거
     const initializeAuth = async () => {
-      // 이미 초기화되었으면 실행하지 않음
-      if (isInitialized) {
-        console.log('Auth already initialized, skipping')
-        return
-      }
-
       try {
-        // 현재 세션 가져오기
-        const { data: { session }, error } = await supabase.auth.getSession()
-
-        if (error) {
-          console.error('Failed to get session:', error)
-          return
-        }
-
-        if (mounted) {
-          setSession(session)
-
-          if (session?.user) {
-            // 초기 세션에서 사용자 로딩
-            try {
-              console.log('Initializing: Loading user from session')
-              const currentUser = await getCurrentUser()
-              setUser(currentUser)
-              setIsInitialized(true)
-              console.log('Initializing: Complete')
-            } catch (error) {
-              console.error('Failed to get current user during init:', error)
-              setUser(null)
-              setIsInitialized(true)
-            }
-          } else {
-            setIsInitialized(true)
-          }
-        }
+        console.log('Initializing: Getting initial session...')
+        // 이 호출이 INITIAL_SESSION 이벤트를 트리거하지만, 우리는 그걸 무시할 것임
+        await supabase.auth.getSession()
       } catch (error) {
-        console.error('Failed to initialize auth:', error)
+        console.error('Failed to trigger initial session:', error)
         if (mounted) {
           setIsInitialized(true)
-        }
-      } finally {
-        if (mounted && !isInitialized) {
-          console.log('Setting loading to false (initialize auth)')
           setLoading(false)
         }
       }
@@ -110,6 +76,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!mounted) return
 
       console.log('Auth state changed:', event, session?.user?.email)
+
+      // INITIAL_SESSION 이벤트 처리
+      if (event === 'INITIAL_SESSION') {
+        console.log('Auth state change: Handling INITIAL_SESSION event')
+        setSession(session)
+
+        if (session?.user && !isInitialized) {
+          console.log('Auth state change: Loading user from INITIAL_SESSION')
+          // 임시 사용자 설정
+          const tempUser = {
+            id: session.user.id,
+            email: session.user.email || '',
+            profile: undefined
+          }
+          setUser(tempUser)
+
+          // 프로필 로딩 시작
+          if (!isLoadingProfile) {
+            setIsLoadingProfile(true)
+            setTimeout(async () => {
+              if (!mounted) return
+              try {
+                console.log('Background: Loading profile from INITIAL_SESSION...')
+                const currentUser = await getCurrentUser()
+                if (currentUser && mounted) {
+                  setUser(currentUser)
+                  setIsInitialized(true)
+                  console.log('Background: Profile loading completed from INITIAL_SESSION')
+                }
+              } catch (error) {
+                console.error('Background: Failed to load profile from INITIAL_SESSION:', error)
+                if (mounted) {
+                  setIsInitialized(true)
+                }
+              } finally {
+                if (mounted) {
+                  setIsLoadingProfile(false)
+                  setLoading(false)
+                }
+              }
+            }, 100)
+          }
+        } else if (!session?.user) {
+          setIsInitialized(true)
+          setLoading(false)
+        }
+        return
+      }
 
       // 초기화가 완료되었고 세션이 동일하면 무시 (더 엄격한 조건)
       if (isInitialized && session?.user?.id === user?.id && !isLoadingProfile) {
