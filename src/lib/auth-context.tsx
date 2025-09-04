@@ -82,12 +82,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setAuthEvent({ event, session })
     })
 
-    // 이벤트 처리 useEffect - 이벤트가 발생할 때마다 실행
+    // 이벤트 처리 useEffect - 이벤트가 변경될 때만 실행
     useEffect(() => {
       if (!authEvent || !mounted) return
 
       const { event, session: newSession } = authEvent
       console.log('Processing auth event:', event)
+
+      // 이벤트 처리 후 즉시 이벤트 초기화 (무한 루프 방지)
+      setAuthEvent(null)
 
       // INITIAL_SESSION 이벤트 처리
       if (event === 'INITIAL_SESSION') {
@@ -193,7 +196,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return
       }
 
-    }, [authEvent, isInitialized, isLoadingProfile, user?.id])
+    }, [authEvent]) // authEvent만 의존성으로 설정하여 무한 루프 방지
 
     return () => {
       mounted = false
