@@ -24,9 +24,16 @@ export default function HomePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    console.log('Main page useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status })
+
     if (!loading && user) {
+      console.log('Main page: User found, redirecting to dashboard')
       // 로그인된 경우 대시보드로 리다이렉트
       router.push('/dashboard')
+    } else if (!loading && !user) {
+      console.log('Main page: No user, showing login form')
+    } else if (loading) {
+      console.log('Main page: Still loading...')
     }
   }, [user, loading, router])
 
