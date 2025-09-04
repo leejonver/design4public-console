@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,7 +34,24 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const { user, loading } = useAuth()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      console.log('Admin layout: No user, redirecting to login')
+      router.push('/login?redirectTo=' + encodeURIComponent(pathname))
+      return
+    }
+
+    if (user?.profile?.status !== 'approved') {
+      console.log('Admin layout: User not approved, status:', user?.profile?.status)
+      router.push('/login?error=unauthorized')
+      return
+    }
+
+    console.log('Admin layout: User approved, proceeding')
+  }, [user, loading, router, pathname])
 
   if (loading) {
     return (
@@ -47,8 +64,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
-  if (!user) {
-    return null
+  if (!user || user?.profile?.status !== 'approved') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>권한 확인 중...</p>
+        </div>
+      </div>
+    )
   }
 
   const filteredNavigation = navigation.filter(item => {
