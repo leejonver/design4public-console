@@ -24,6 +24,30 @@ export default function HomePage() {
   const [error, setError] = useState('')
   const [hasRedirected, setHasRedirected] = useState(false)
 
+  // 즉시 리다이렉트 체크 - 컴포넌트 마운트 시 즉시 실행
+  useEffect(() => {
+    console.log('Main page mounted - immediate check:', { loading, user: !!user, profileStatus: user?.profile?.status })
+    
+    // 즉시 리다이렉트 체크
+    if (!loading && user && !hasRedirected) {
+      console.log('Immediate redirect: User found, redirecting to dashboard')
+      setHasRedirected(true)
+      window.location.href = '/dashboard'
+      return
+    }
+  }, []) // 마운트 시 한 번만 실행
+
+  // Auth 상태 변경 감지 - 별도 useEffect로 강제 실행
+  useEffect(() => {
+    console.log('Auth state change detected:', { loading, user: !!user, profileStatus: user?.profile?.status, hasRedirected })
+    
+    if (!loading && user && !hasRedirected) {
+      console.log('Auth state redirect: User found, redirecting to dashboard')
+      setHasRedirected(true)
+      window.location.href = '/dashboard'
+    }
+  }, [loading, user, hasRedirected]) // Auth 상태 변경 시마다 실행
+
   useEffect(() => {
     console.log('Main page useEffect:', { loading, user: !!user, profileStatus: user?.profile?.status })
 
