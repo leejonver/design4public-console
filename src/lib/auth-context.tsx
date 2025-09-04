@@ -77,6 +77,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Failed to initialize auth:', error)
       } finally {
         if (mounted) {
+          console.log('Setting loading to false (initialize auth)')
           setLoading(false)
         }
       }
@@ -106,6 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null)
       }
 
+      console.log('Setting loading to false (auth state change)')
       setLoading(false)
     })
 
