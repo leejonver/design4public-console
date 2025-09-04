@@ -76,10 +76,10 @@ export const getUserProfile = async (userId: string): Promise<Profile | undefine
 }
 
 // 사용자 프로필 업데이트
-export const updateUserProfile = async (userId: string, updates: ProfileUpdate) => {
+export const updateUserProfile = async (userId: string, updates: any) => {
   const { data, error } = await supabase
     .from('profiles')
-    .update(updates as any)
+    .update(updates)
     .eq('id', userId)
     .select()
     .single()
