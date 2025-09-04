@@ -24,6 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false)
 
   // 사용자 정보 새로고침
   const refreshUser = async () => {
@@ -52,6 +53,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let mounted = true
 
     const initializeAuth = async () => {
+      // 이미 초기화되었으면 실행하지 않음
+      if (isInitialized) {
+        console.log('Auth already initialized, skipping')
+        return
+      }
+
       try {
         // 현재 세션 가져오기
         const { data: { session }, error } = await supabase.auth.getSession()
@@ -65,19 +72,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(session)
 
           if (session?.user) {
+            // 초기 세션에서 사용자 로딩
             try {
+              console.log('Initializing: Loading user from session')
               const currentUser = await getCurrentUser()
               setUser(currentUser)
+              setIsInitialized(true)
+              console.log('Initializing: Complete')
             } catch (error) {
-              console.error('Failed to get current user:', error)
+              console.error('Failed to get current user during init:', error)
               setUser(null)
+              setIsInitialized(true)
             }
+          } else {
+            setIsInitialized(true)
           }
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error)
-      } finally {
         if (mounted) {
+          setIsInitialized(true)
+        }
+      } finally {
+        if (mounted && !isInitialized) {
           console.log('Setting loading to false (initialize auth)')
           setLoading(false)
         }
@@ -94,8 +111,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       console.log('Auth state changed:', event, session?.user?.email)
 
-      // 초기화가 완료되었고 세션이 동일하면 무시
-      if (isInitialized && session?.user?.id === user?.id) {
+      // 초기화가 완료되었고 세션이 동일하면 무시 (더 엄격한 조건)
+      if (isInitialized && session?.user?.id === user?.id && !isLoadingProfile) {
         console.log('Auth state change: Ignoring duplicate event')
         return
       }
@@ -116,32 +133,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('Auth state change: Setting temp user:', tempUser)
           setUser(tempUser)
 
-          // 백그라운드에서 프로필 정보 로드 시도 (한 번만)
-          if (!isInitialized) {
+          // 프로필 로딩이 진행 중이 아니고 초기화되지 않은 경우에만 백그라운드 로딩
+          if (!isInitialized && !isLoadingProfile) {
+            setIsLoadingProfile(true)
+
             setTimeout(async () => {
+              if (!mounted) return
+
               try {
                 console.log('Background: Loading profile...')
                 const currentUser = await getCurrentUser()
                 console.log('Background: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
+
                 if (currentUser && mounted) {
                   setUser(currentUser)
                   setIsInitialized(true)
                   console.log('Background: Profile loading completed')
+                } else if (mounted) {
+                  setIsInitialized(true)
                 }
               } catch (profileError) {
                 console.error('Background: Failed to load profile, keeping temp user:', profileError)
-                // 프로필 로드 실패해도 임시 사용자는 유지
                 if (mounted) {
                   setIsInitialized(true)
                 }
+              } finally {
+                if (mounted) {
+                  setIsLoadingProfile(false)
+                }
               }
-            }, 100) // 약간의 지연 후 실행
+            }, 100)
           }
         } catch (error) {
           console.error('Failed to get current user in auth state change:', error)
           setUser(null)
           if (mounted) {
             setIsInitialized(true)
+            setIsLoadingProfile(false)
           }
         }
       } else {
@@ -149,6 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null)
         if (mounted) {
           setIsInitialized(true)
+          setIsLoadingProfile(false)
         }
       }
 
@@ -163,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [])
+  }, [isInitialized]) // isInitialized가 변경될 때만 재실행
 
   const value: AuthContextType = {
     user,
