@@ -259,7 +259,7 @@ export const getUserStats = async () => {
  */
 export const calculateProfileCompletion = (profile: Profile): number => {
   let completed = 0
-  let total = 3 // 이메일, 역할, 상태
+  const total = 3 // 이메일, 역할, 상태
 
   // 이메일 확인
   if (profile.email) completed++

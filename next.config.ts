@@ -4,32 +4,32 @@ const nextConfig: NextConfig = {
   // Vercel 배포 최적화
   poweredByHeader: false,
 
-  // TypeScript 및 ESLint 설정
+  // TypeScript 설정 - 빌드 중 오류 허용하지 않음
   typescript: {
-    ignoreBuildErrors: true, // 빌드 중 TypeScript 오류 무시
+    ignoreBuildErrors: false,
   },
 
+  // ESLint 설정 - 빌드 중 오류 허용하지 않음
   eslint: {
-    ignoreDuringBuilds: true, // 빌드 중 ESLint 완전 무시
-  },
-
-  // 빌드 최적화
-  experimental: {
-    // 웹팩 빌드 캐시 비활성화 (Vercel 호환성)
-    webpackBuildWorker: false,
+    ignoreDuringBuilds: false,
   },
 
   // 이미지 최적화 설정
   images: {
     domains: ['localhost'],
-    unoptimized: true, // Vercel에서 이미지 최적화 비활성화 (필요시)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
 
   // 환경별 설정
   ...(process.env.NODE_ENV === 'production' && {
     // 프로덕션 전용 설정
     compiler: {
-      removeConsole: false, // 개발 중에는 console 유지
+      removeConsole: process.env.NODE_ENV === 'production',
     },
   }),
 };

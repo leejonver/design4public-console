@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 
-const supabaseUrl = 'https://ftuudbxhffnbzjxgqagp.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0dXVkYnhoZmZuYnpqeGdxYWdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5NjQ3MDAsImV4cCI6MjA3MjU0MDcwMH0.WVWlZ2-KZBu1fSHz9u8o7ymbMrLS4G2cglquzcFMZDs'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -13,8 +17,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 })
 
 // Server-side Supabase client for API routes
-export const createServerSupabaseClient = () => {
-  const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0dXVkYnhoZmZuYnpqeGdxYWdwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njk2NDcwMCwiZXhwIjoyMDcyNTQwNzAwfQ.yj3-g8atEcSI3q_gwl04GaJzwo2wkmBUwTkqofew-EQ'
+export const createServerSupabaseClient = (context?: any) => {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase server environment variables')
+  }
 
   return createClient<Database>(supabaseUrl, serviceRoleKey, {
     auth: {

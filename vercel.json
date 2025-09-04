@@ -6,7 +6,6 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "protect": false,
   "functions": {
     "src/app/**/*.ts": {
       "maxDuration": 10

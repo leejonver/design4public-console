@@ -10,8 +10,10 @@ interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
+  error: string | null
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  clearError: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // 사용자 프로필을 새로고침하는 함수
   const refreshProfile = async () => {
@@ -31,10 +34,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (user) {
         const userProfile = await getCurrentUserProfile()
         setProfile(userProfile)
+        setError(null) // 성공 시 에러 초기화
       }
     } catch (error) {
       console.error('프로필 새로고침 중 오류:', error)
+      setError('프로필 정보를 불러오는데 실패했습니다.')
     }
+  }
+
+  // 에러 초기화 함수
+  const clearError = () => {
+    setError(null)
   }
 
   // 로그아웃 함수
@@ -115,8 +125,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     profile,
     loading,
+    error,
     signOut,
-    refreshProfile
+    refreshProfile,
+    clearError
   }
 
   return (
