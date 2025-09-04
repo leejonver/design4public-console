@@ -69,9 +69,12 @@ export const getUserProfile = async (userId: string): Promise<Profile | undefine
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single()
+    .maybeSingle() // .single() 대신 .maybeSingle() 사용
 
-  if (error) return undefined
+  if (error) {
+    console.error('Profile fetch error:', error)
+    return undefined
+  }
   return data
 }
 
