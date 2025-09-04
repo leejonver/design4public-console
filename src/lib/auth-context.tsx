@@ -23,6 +23,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   // 사용자 정보 새로고침
   const refreshUser = async () => {
@@ -93,6 +94,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       console.log('Auth state changed:', event, session?.user?.email)
 
+      // 초기화가 완료되었고 세션이 동일하면 무시
+      if (isInitialized && session?.user?.id === user?.id) {
+        console.log('Auth state change: Ignoring duplicate event')
+        return
+      }
+
       setSession(session)
 
       if (session?.user) {
@@ -109,31 +116,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('Auth state change: Setting temp user:', tempUser)
           setUser(tempUser)
 
-          // 백그라운드에서 프로필 정보 로드 시도
-          setTimeout(async () => {
-            try {
-              console.log('Background: Loading profile...')
-              const currentUser = await getCurrentUser()
-              console.log('Background: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
-              if (currentUser) {
-                setUser(currentUser)
+          // 백그라운드에서 프로필 정보 로드 시도 (한 번만)
+          if (!isInitialized) {
+            setTimeout(async () => {
+              try {
+                console.log('Background: Loading profile...')
+                const currentUser = await getCurrentUser()
+                console.log('Background: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
+                if (currentUser && mounted) {
+                  setUser(currentUser)
+                  setIsInitialized(true)
+                  console.log('Background: Profile loading completed')
+                }
+              } catch (profileError) {
+                console.error('Background: Failed to load profile, keeping temp user:', profileError)
+                // 프로필 로드 실패해도 임시 사용자는 유지
+                if (mounted) {
+                  setIsInitialized(true)
+                }
               }
-            } catch (profileError) {
-              console.error('Background: Failed to load profile, keeping temp user:', profileError)
-              // 프로필 로드 실패해도 임시 사용자는 유지
-            }
-          }, 100) // 약간의 지연 후 실행
+            }, 100) // 약간의 지연 후 실행
+          }
         } catch (error) {
           console.error('Failed to get current user in auth state change:', error)
           setUser(null)
+          if (mounted) {
+            setIsInitialized(true)
+          }
         }
       } else {
         console.log('Auth state change: No user session')
         setUser(null)
+        if (mounted) {
+          setIsInitialized(true)
+        }
       }
 
-      console.log('Setting loading to false (auth state change)')
-      setLoading(false)
+      // 로딩 상태는 초기화 시에만 false로 설정
+      if (!isInitialized) {
+        console.log('Setting loading to false (auth state change)')
+        setLoading(false)
+      }
     })
 
     return () => {

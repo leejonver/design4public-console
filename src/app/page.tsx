@@ -35,7 +35,7 @@ export default function HomePage() {
     } else if (loading) {
       console.log('Main page: Still loading...')
     }
-  }, [user, loading, router])
+  }, [user, loading]) // router 제거하여 불필요한 재실행 방지
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
