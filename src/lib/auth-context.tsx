@@ -110,16 +110,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(tempUser)
 
           // 백그라운드에서 프로필 정보 로드 시도
-          try {
-            const currentUser = await getCurrentUser()
-            console.log('Auth state change: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
-            if (currentUser) {
-              setUser(currentUser)
+          setTimeout(async () => {
+            try {
+              console.log('Background: Loading profile...')
+              const currentUser = await getCurrentUser()
+              console.log('Background: Current user loaded:', { user: !!currentUser, profile: !!currentUser?.profile })
+              if (currentUser) {
+                setUser(currentUser)
+              }
+            } catch (profileError) {
+              console.error('Background: Failed to load profile, keeping temp user:', profileError)
+              // 프로필 로드 실패해도 임시 사용자는 유지
             }
-          } catch (profileError) {
-            console.error('Failed to load profile, keeping temp user:', profileError)
-            // 프로필 로드 실패해도 임시 사용자는 유지
-          }
+          }, 100) // 약간의 지연 후 실행
         } catch (error) {
           console.error('Failed to get current user in auth state change:', error)
           setUser(null)
