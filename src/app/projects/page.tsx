@@ -102,7 +102,7 @@ export default function ProjectsPage() {
           ]
         }
       ]
-      setProjects(testData)
+      setProjects(testData);
     } catch (error) {
       console.error('Failed to fetch projects:', error)
     } finally {
