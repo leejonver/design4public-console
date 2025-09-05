@@ -4,14 +4,22 @@ const nextConfig: NextConfig = {
   // Vercel 배포 최적화
   poweredByHeader: false,
 
-  // TypeScript 설정 - 배포 성공을 위해 오류 무시
+  // TypeScript 설정 - 배포를 위한 강제 설정
   typescript: {
     ignoreBuildErrors: true,
+    tsconfigPath: './tsconfig.json'
   },
 
-  // ESLint 설정 - 빌드 시 경고 무시
+  // ESLint 설정 - 빌드 시 완전 무시
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  // 빌드 최적화
+  swcMinify: true,
+  experimental: {
+    // 빌드 속도 향상
+    webpackBuildWorker: true,
   },
 
   // 이미지 최적화 설정
