@@ -101,12 +101,12 @@ export default function BrandsPage() {
   const rowMarkup = brands.map((brand, index) => (
     <IndexTable.Row id={brand.id} key={brand.id} position={index}>
       <IndexTable.Cell>
-        {brand.logo_url ? (
+        {brand.cover_image_url ? (
           <div className="flex items-center justify-center">
             <div
               className="w-12 h-12 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100"
               style={{
-                backgroundImage: `url(${brand.logo_url})`,
+                backgroundImage: `url(${brand.cover_image_url})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
