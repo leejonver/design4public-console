@@ -38,7 +38,7 @@ export default function ImageTestPage() {
           title="이미지 업로드 테스트"
           primaryAction={
             uploadedImages.length > 0 && (
-              <Button destructive onClick={clearAllImages}>
+              <Button variant="primary" tone="critical" onClick={clearAllImages}>
                 전체 삭제
               </Button>
             )
