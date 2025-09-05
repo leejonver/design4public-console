@@ -44,6 +44,7 @@ export default function ItemsPage() {
           nara_url: 'https://www.g2b.go.kr/example2',
           image_url: 'https://via.placeholder.com/200x150?text=사무용의자',
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           brands: {
             id: 'brand2',
             name: '모던퍼니처'
