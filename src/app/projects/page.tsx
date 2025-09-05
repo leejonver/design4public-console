@@ -24,16 +24,13 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       console.log('Starting to fetch projects...');
-
       // 실제 Supabase API 호출 시도
       const data = await projectService.getProjects();
       console.log('Projects fetched from API:', data);
-
       setProjects(data);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch projects:', error);
-
       // API 호출 실패 시 임시 테스트 데이터 사용
       console.log('Falling back to test data...');
       const testData = [
@@ -45,68 +42,11 @@ export default function ProjectsPage() {
           year: 2024,
           area: 150.5,
           created_at: new Date().toISOString(),
-          cover_image_url: 'https://via.placeholder.com/100x100?text=Cover1',
-          project_tags: [
-            {
-              tag_id: 'tag1',
-              tags: { name: '현대적' }
-            },
-            {
-              tag_id: 'tag4',
-              tags: { name: '인체공학적' }
-            }
-          ],
-          project_items: [
-            {
-              item_id: 'item1',
-              items: {
-                id: 'item1',
-                name: '사무용 책상',
-                description: '편안한 작업을 위한 사무용 책상'
-              }
-            },
-            {
-              item_id: 'item2',
-              items: {
-                id: 'item2',
-                name: '사무용 의자',
-                description: '인체공학적 디자인의 사무용 의자'
-              }
-            }
-          ]
-        },
-        {
-          id: '2',
-          title: '테스트 프로젝트 2',
-          description: '두 번째 테스트 프로젝트',
-          status: 'published',
-          year: 2023,
-          area: 200.0,
-          created_at: new Date().toISOString(),
-          cover_image_url: 'https://via.placeholder.com/100x100?text=Cover2',
-          project_tags: [
-            {
-              tag_id: 'tag2',
-              tags: { name: '클래식' }
-            }
-          ],
-          project_items: [
-            {
-              item_id: 'item3',
-              items: {
-                id: 'item3',
-                name: '책상용 조명',
-                description: '눈부심 방지 LED 조명'
-              }
-            }
-          ]
+          cover_image_url: 'https://via.placeholder.com/100x100?text=Cover1'
         }
-      ]
+      ];
       setProjects(testData);
-    } catch (error) {
-      console.error('Failed to fetch projects:', error)
-    } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 

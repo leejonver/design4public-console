@@ -21,7 +21,16 @@ export default function ItemsPage() {
 
   const fetchItems = async () => {
     try {
-      // 임시 테스트 데이터
+      console.log('Starting to fetch items...');
+      // 실제 Supabase API 호출 시도
+      const data = await itemService.getItems();
+      console.log('Items fetched from API:', data);
+      setItems(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch items:', error);
+      // API 호출 실패 시 임시 테스트 데이터 사용
+      console.log('Falling back to test data...');
       const testData = [
         {
           id: '1',

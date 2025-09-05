@@ -21,7 +21,16 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      // 임시 테스트 데이터
+      console.log('Starting to fetch users...');
+      // 실제 Supabase API 호출 시도
+      const data = await userService.getUsers();
+      console.log('Users fetched from API:', data);
+      setUsers(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      // API 호출 실패 시 임시 테스트 데이터 사용
+      console.log('Falling back to test data...');
       const testData = [
         {
           id: 'user1',

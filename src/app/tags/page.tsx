@@ -35,7 +35,16 @@ export default function TagsPage() {
 
   const fetchTags = async () => {
     try {
-      // 임시 테스트 데이터
+      console.log('Starting to fetch tags...');
+      // 실제 Supabase API 호출 시도
+      const data = await tagService.getTags();
+      console.log('Tags fetched from API:', data);
+      setTags(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+      // API 호출 실패 시 임시 테스트 데이터 사용
+      console.log('Falling back to test data...');
       const testData = [
         {
           id: 'tag1',

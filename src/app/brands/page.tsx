@@ -21,7 +21,16 @@ export default function BrandsPage() {
 
   const fetchBrands = async () => {
     try {
-      // 임시 테스트 데이터
+      console.log('Starting to fetch brands...');
+      // 실제 Supabase API 호출 시도
+      const data = await brandService.getBrands();
+      console.log('Brands fetched from API:', data);
+      setBrands(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch brands:', error);
+      // API 호출 실패 시 임시 테스트 데이터 사용
+      console.log('Falling back to test data...');
       const testData = [
         {
           id: 'brand1',
