@@ -129,19 +129,19 @@ export default function ItemsPage() {
       <IndexTable.Cell>
         <div className="flex gap-2">
           {item.nara_url && (
-            <Button size="slim" plain onClick={() => window.open(item.nara_url!, '_blank')}>
+            <Button size="slim" variant="secondary" onClick={() => window.open(item.nara_url!, '_blank')}>
               나라장터
             </Button>
           )}
           {item.image_url && (
-            <Button size="slim" plain onClick={() => window.open(item.image_url!, '_blank')}>
+            <Button size="slim" variant="secondary" onClick={() => window.open(item.image_url!, '_blank')}>
               이미지
             </Button>
           )}
         </div>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodySm" color="subdued">
+        <Text variant="bodySm" as="span">
           {new Date(item.created_at).toLocaleDateString('ko-KR')}
         </Text>
       </IndexTable.Cell>
