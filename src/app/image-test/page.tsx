@@ -74,7 +74,7 @@ export default function ImageTestPage() {
                       <Text variant="headingXl" as="p">
                         {(uploadedImages.reduce((sum, img) => sum + img.size, 0) / 1024 / 1024).toFixed(2)} MB
                       </Text>
-                      <Text variant="bodySm" color="subdued">
+                      <Text variant="bodySm" as="span">
                         총 크기
                       </Text>
                     </div>
