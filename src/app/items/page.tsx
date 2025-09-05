@@ -107,7 +107,7 @@ export default function ItemsPage() {
           />
         ) : (
           <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-            <Text variant="bodySm" color="subdued">없음</Text>
+            <Text variant="bodySm" as="span">없음</Text>
           </div>
         )}
       </IndexTable.Cell>
