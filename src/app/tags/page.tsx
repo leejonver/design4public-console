@@ -146,7 +146,7 @@ export default function TagsPage() {
       <Page
         title="태그 관리"
         primaryAction={
-          <Button primary onClick={handleCreate}>
+          <Button variant="primary" onClick={handleCreate}>
             새 태그
           </Button>
         }
@@ -196,7 +196,7 @@ export default function TagsPage() {
                           아직 등록된 태그가 없습니다.
                         </Text>
                         <div className="mt-4">
-                          <Button primary onClick={handleCreate}>
+                          <Button variant="primary" onClick={handleCreate}>
                             첫 태그 만들기
                           </Button>
                         </div>

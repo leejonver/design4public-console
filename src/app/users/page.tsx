@@ -185,10 +185,10 @@ export default function UsersPage() {
         <div className="flex gap-2">
           {user.status === 'pending' && (
             <>
-              <Button size="slim" primary onClick={() => handleApproveUser(user.id)}>
+              <Button size="slim" variant="primary" onClick={() => handleApproveUser(user.id)}>
                 승인
               </Button>
-              <Button size="slim" destructive onClick={() => handleRejectUser(user.id)}>
+              <Button size="slim" variant="primary" tone="critical" onClick={() => handleRejectUser(user.id)}>
                 거부
               </Button>
             </>

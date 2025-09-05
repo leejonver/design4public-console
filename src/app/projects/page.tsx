@@ -228,7 +228,7 @@ export default function ProjectsPage() {
         title="프로젝트 관리"
         primaryAction={
           (isMaster || isAdmin) && (
-            <Button primary onClick={handleCreate}>
+            <Button variant="primary" onClick={handleCreate}>
               새 프로젝트
             </Button>
           )
@@ -266,7 +266,7 @@ export default function ProjectsPage() {
                         아직 등록된 프로젝트가 없습니다.
                       </Text>
                       <div className="mt-4">
-                        <Button primary onClick={handleCreate}>
+                        <Button variant="primary" onClick={handleCreate}>
                           첫 프로젝트 만들기
                         </Button>
                       </div>

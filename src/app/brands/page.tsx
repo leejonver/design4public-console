@@ -199,7 +199,7 @@ export default function BrandsPage() {
                         아직 등록된 브랜드가 없습니다.
                       </Text>
                       <div className="mt-4">
-                        <Button primary onClick={handleCreate}>
+                        <Button variant="primary" onClick={handleCreate}>
                           첫 브랜드 만들기
                         </Button>
                       </div>

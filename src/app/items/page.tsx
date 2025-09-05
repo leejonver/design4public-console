@@ -162,7 +162,7 @@ export default function ItemsPage() {
       <Page
         title="아이템 관리"
         primaryAction={
-          <Button primary onClick={handleCreate}>
+          <Button variant="primary" onClick={handleCreate}>
             새 아이템
           </Button>
         }
@@ -197,7 +197,7 @@ export default function ItemsPage() {
                         아직 등록된 아이템이 없습니다.
                       </Text>
                       <div className="mt-4">
-                        <Button primary onClick={handleCreate}>
+                        <Button variant="primary" onClick={handleCreate}>
                           첫 아이템 만들기
                         </Button>
                       </div>

@@ -49,7 +49,7 @@ export function AuthGuard({
               </Text>
             </div>
             <div className="mt-6">
-              <Button primary onClick={() => router.push('/auth')}>
+              <Button variant="primary" onClick={() => router.push('/auth')}>
                 로그인하기
               </Button>
             </div>
