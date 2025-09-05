@@ -31,6 +31,7 @@ export default function ItemsPage() {
           nara_url: 'https://www.g2b.go.kr/example1',
           image_url: 'https://via.placeholder.com/200x150?text=사무용책상',
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           brands: {
             id: 'brand1',
             name: '테스트 브랜드'
