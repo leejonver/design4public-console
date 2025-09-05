@@ -175,7 +175,7 @@ export default function BrandsPage() {
             <Card>
               {loading ? (
                 <div className="p-8 text-center">
-                  <Text variant="bodyMd">로딩 중...</Text>
+                  <Text variant="bodyMd" as="span">로딩 중...</Text>
                 </div>
               ) : (
                 <IndexTable
