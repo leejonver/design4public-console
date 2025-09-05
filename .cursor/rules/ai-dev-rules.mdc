@@ -1,0 +1,45 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+AI Development Rules
+The AI must adhere to the context provided in context.md and generate code according to the following rules. These rules are established to ensure code consistency, maintainability, and predictability.
+
+Rule #1: Strict Adherence to the Tech Stack
+Do not use any UI library other than @shopify/polaris. All visual elements (buttons, forms, tables, layouts, icons, etc.) must be implemented using components from @shopify/polaris.
+
+The application must be structured using the Next.js App Router.
+
+Database interactions must be performed exclusively through the Supabase client library.
+
+Rule #2: Strict Separation of Concerns
+UI components must be data-agnostic. Do not write direct database call code, such as supabase.from(...), within UI files like src/app/**/*.tsx (Pages) or src/components/**/*.tsx (Components).
+
+All data logic must be isolated in the services layer. All code related to database operations (SELECT, INSERT, UPDATE, DELETE) must be defined as functions within their respective service files in the src/services/ directory (e.g., projectService.ts). UI components must call these service functions to interact with data.
+
+Rule #3: Proactive Use of TypeScript and Type Safety
+The use of the any type is strictly forbidden. All data objects, function arguments, and return values that interact with the database must be explicitly typed using the types imported from src/types/database.ts.
+
+Do not rely on type inference for function signatures. Explicitly declare types for function parameters and return values to make the function's contract clear.
+
+Rule #4: UI Implementation According to Polaris Principles
+Layout Construction: The overall page structure must be built using Polaris's Page and Layout components. Use the Card component to create distinct sections. Do not attempt to build layouts using arbitrary div tags.
+
+No Reinventing the Wheel: If a suitable component exists in Polaris (e.g., IndexTable, FormLayout, TextField, Select, Badge), you must use it instead of creating a similar custom component.
+
+Styling: Minimize the use of custom CSS and inline style attributes. The visual presentation of components should be controlled primarily through the props provided by the Polaris components.
+
+Rule #5: Clear Implementation of Business Logic
+Role-Based Access Control (RBAC) is mandatory. The permission logic based on the user roles defined in context.md (section 3.2: master, admin, general) must be strictly implemented.
+
+Example 1: The "Users" menu item in the navigation should only be rendered if the current user's role is master.
+
+Example 2: The "Delete" functionality must be hidden or disabled for users with the general role.
+
+Adherence to Authentication Flow: The authentication flow specified in context.md (section 3.1: Sign up → Email verification → Admin approval) must be implemented correctly. The system must verify that a user's status is approved upon login.
+
+Rule #6: Adherence to the Development Process
+Generate code in Vertical Slices. Do not follow a "build all UI first, connect logic later" approach. Instead, create code for one complete feature at a time (e.g., "view project list"), including its UI, data logic, and API integration.
+
+No Hardcoding. Do not use arbitrary mock data for UI text or data displays. All data should be fetched from Supabase via the services layer. (Temporary mock data is permissible in

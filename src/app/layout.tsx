@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext'
-
-const inter = Inter({ subsets: ['latin'] })
+import { PolarisProvider } from '@/components/PolarisProvider'
+import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata: Metadata = {
-  title: 'Design4Public Console',
-  description: 'CMS for Design4Public',
+  title: 'design4public 콘텐츠관리자',
+  description: '콘텐츠 관리 시스템',
 }
 
 export default function RootLayout({
@@ -17,10 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body className="antialiased">
+        <PolarisProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </PolarisProvider>
       </body>
     </html>
   )

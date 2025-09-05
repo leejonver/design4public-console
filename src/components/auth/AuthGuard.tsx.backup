@@ -1,0 +1,150 @@
+'use client'
+
+import { useEffect, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
+import { Layout, Card, Text, Spinner } from '@shopify/polaris'
+import { useRequireAuth } from '@/lib/auth-context'
+
+interface AuthGuardProps {
+  children: ReactNode
+  requireApproval?: boolean
+  requiredRole?: 'master' | 'admin' | 'general'
+}
+
+export function AuthGuard({
+  children,
+  requireApproval = true,
+  requiredRole
+}: AuthGuardProps) {
+  const { isAuthenticated, isApproved, profile, loading, isMaster, isAdmin, isGeneral } = useRequireAuth()
+  const router = useRouter()
+
+  // 로딩 중
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <div className="p-8 text-center">
+            <Spinner size="large" />
+            <div className="mt-4">
+              <Text variant="bodyMd">
+                로딩 중...
+              </Text>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // 로그인하지 않은 경우
+  if (!isAuthenticated) {
+    useEffect(() => {
+      router.push('/auth')
+    }, [router])
+
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <div className="p-8 text-center">
+            <Text variant="headingMd" as="h2">
+              로그인이 필요합니다
+            </Text>
+            <div className="mt-4">
+              <Text variant="bodyMd" color="subdued">
+                로그인 페이지로 이동합니다...
+              </Text>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // 승인 대기 중인 경우
+  if (requireApproval && !isApproved) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <div className="p-8 text-center">
+            <Text variant="headingMd" as="h2" color="warning">
+              계정 승인 대기 중
+            </Text>
+            <div className="mt-4">
+              <Text variant="bodyMd" color="subdued">
+                이메일 인증이 완료되었습니다. 관리자의 승인을 기다려주세요.
+              </Text>
+            </div>
+            <div className="mt-4">
+              <Text variant="bodySm" color="subdued">
+                현재 상태: {profile?.status}
+              </Text>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // 역할 권한 체크
+  if (requiredRole) {
+    const hasRequiredRole = (
+      (requiredRole === 'master' && isMaster) ||
+      (requiredRole === 'admin' && (isMaster || isAdmin)) ||
+      (requiredRole === 'general' && (isMaster || isAdmin || isGeneral))
+    )
+
+    if (!hasRequiredRole) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <Card>
+            <div className="p-8 text-center">
+              <Text variant="headingMd" as="h2" color="critical">
+                접근 권한이 없습니다
+              </Text>
+              <div className="mt-4">
+                <Text variant="bodyMd" color="subdued">
+                  이 페이지에 접근하려면 {requiredRole} 권한이 필요합니다.
+                </Text>
+              </div>
+              <div className="mt-4">
+                <Text variant="bodySm" color="subdued">
+                  현재 역할: {profile?.role}
+                </Text>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )
+    }
+
+  // 모든 조건을 만족하는 경우
+  return <>{children}</>
+}
+
+// 간단한 인증 체크 컴포넌트 (승인 상태만 체크)
+export function RequireAuth({ children }: { children: ReactNode }) {
+  return (
+    <AuthGuard requireApproval={true}>
+      {children}
+    </AuthGuard>
+  )
+}
+
+// 관리자 권한이 필요한 경우
+export function RequireAdmin({ children }: { children: ReactNode }) {
+  return (
+    <AuthGuard requireApproval={true} requiredRole="admin">
+      {children}
+    </AuthGuard>
+  )
+}
+
+// 마스터 권한이 필요한 경우
+export function RequireMaster({ children }: { children: ReactNode }) {
+  return (
+    <AuthGuard requireApproval={true} requiredRole="master">
+      {children}
+    </AuthGuard>
+  )
+}
