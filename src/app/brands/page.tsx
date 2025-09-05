@@ -135,14 +135,14 @@ export default function BrandsPage() {
       <IndexTable.Cell>
         <div className="flex gap-2">
           {brand.website_url && (
-            <Button size="slim" plain onClick={() => window.open(brand.website_url!, '_blank')}>
+            <Button size="slim" variant="secondary" onClick={() => window.open(brand.website_url!, '_blank')}>
               웹사이트
             </Button>
           )}
         </div>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodySm" color="subdued">
+        <Text variant="bodySm" as="span">
           {new Date(brand.created_at).toLocaleDateString('ko-KR')}
         </Text>
       </IndexTable.Cell>
