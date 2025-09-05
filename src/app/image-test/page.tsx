@@ -90,7 +90,7 @@ export default function ImageTestPage() {
                       <Text variant="headingXl" as="p">
                         10
                       </Text>
-                      <Text variant="bodySm" color="subdued">
+                      <Text variant="bodySm" as="span">
                         최대 파일 수
                       </Text>
                     </div>
