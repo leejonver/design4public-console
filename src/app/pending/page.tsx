@@ -35,24 +35,24 @@ function PendingContent() {
                     </Text>
                   </div>
 
-                  <Banner status="warning">
-                    <Text variant="bodyMd">
+                  <Banner tone="warning">
+                    <Text variant="bodyMd" as="span">
                       이메일 인증이 완료되었습니다. 관리자의 승인을 기다려주세요.
                     </Text>
                   </Banner>
 
                   <div className="mt-6 space-y-4">
                     <div>
-                      <Text variant="bodySm" color="subdued">이메일</Text>
+                      <Text variant="bodySm" as="span">이메일</Text>
                       <div>
                         <Text variant="bodyMd">{profile?.email}</Text>
                       </div>
                     </div>
 
                     <div>
-                      <Text variant="bodySm" color="subdued">현재 상태</Text>
+                      <Text variant="bodySm" as="span">현재 상태</Text>
                       <div>
-                        <Text variant="bodyMd" color="warning">
+                        <Text variant="bodyMd" as="span">
                           {profile?.status}
                         </Text>
                       </div>
@@ -77,7 +77,7 @@ function PendingContent() {
                   </div>
 
                   <div className="mt-6">
-                    <Text variant="bodySm" color="subdued">
+                    <Text variant="bodySm" as="span">
                       승인 완료 후 자동으로 대시보드로 이동합니다.
                     </Text>
                   </div>
