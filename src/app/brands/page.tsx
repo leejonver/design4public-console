@@ -115,7 +115,7 @@ export default function BrandsPage() {
         ) : (
           <div className="flex items-center justify-center">
             <div className="w-12 h-12 rounded-full border-2 border-gray-200 bg-gray-100 flex items-center justify-center">
-              <Text variant="bodySm" color="subdued">
+              <Text variant="bodySm" as="span">
                 {brand.name.charAt(0)}
               </Text>
             </div>
