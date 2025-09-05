@@ -66,7 +66,7 @@ export default function ImageTestPage() {
                       <Text variant="headingXl" as="p">
                         {uploadedImages.length}
                       </Text>
-                      <Text variant="bodySm" color="subdued">
+                      <Text variant="bodySm" as="span">
                         업로드된 파일
                       </Text>
                     </div>
