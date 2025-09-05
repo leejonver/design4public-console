@@ -150,7 +150,7 @@ export default function ItemsPage() {
           <Button size="slim" onClick={() => handleEdit(item)}>
             수정
           </Button>
-          <Button size="slim" destructive onClick={() => handleDelete(item)}>
+          <Button size="slim" variant="primary" tone="critical" onClick={() => handleDelete(item)}>
             삭제
           </Button>
         </div>
