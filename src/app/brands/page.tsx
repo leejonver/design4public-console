@@ -151,7 +151,7 @@ export default function BrandsPage() {
           <Button size="slim" onClick={() => handleEdit(brand)}>
             수정
           </Button>
-          <Button size="slim" destructive onClick={() => handleDelete(brand)}>
+          <Button size="slim" variant="primary" tone="critical" onClick={() => handleDelete(brand)}>
             삭제
           </Button>
         </div>
