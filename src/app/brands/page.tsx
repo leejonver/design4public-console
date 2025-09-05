@@ -258,7 +258,7 @@ export default function BrandsPage() {
           ]}
         >
           <Modal.Section>
-            <Text variant="bodyMd">
+            <Text variant="bodyMd" as="span">
               정말로 "{deleteConfirm?.name}" 브랜드를 삭제하시겠습니까?
               이 작업은 되돌릴 수 없습니다.
             </Text>
