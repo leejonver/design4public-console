@@ -112,17 +112,17 @@ export default function ItemsPage() {
         )}
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodyMd" fontWeight="bold">
+        <Text variant="bodyMd" as="span" fontWeight="bold">
           {item.name}
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodyMd" color="subdued">
+        <Text variant="bodyMd" as="span">
           {item.description || '설명 없음'}
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodyMd">
+        <Text variant="bodyMd" as="span">
           {(item as any).brands?.name || '브랜드 없음'}
         </Text>
       </IndexTable.Cell>
