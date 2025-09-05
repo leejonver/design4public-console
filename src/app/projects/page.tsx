@@ -23,7 +23,19 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
-      // 임시 테스트 데이터에 태그 정보 추가
+      console.log('Starting to fetch projects...');
+
+      // 실제 Supabase API 호출 시도
+      const data = await projectService.getProjects();
+      console.log('Projects fetched from API:', data);
+
+      setProjects(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+
+      // API 호출 실패 시 임시 테스트 데이터 사용
+      console.log('Falling back to test data...');
       const testData = [
         {
           id: '1',
