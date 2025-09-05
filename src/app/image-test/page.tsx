@@ -82,7 +82,7 @@ export default function ImageTestPage() {
                       <Text variant="headingXl" as="p">
                         10 MB
                       </Text>
-                      <Text variant="bodySm" color="subdued">
+                      <Text variant="bodySm" as="span">
                         최대 파일 크기
                       </Text>
                     </div>
