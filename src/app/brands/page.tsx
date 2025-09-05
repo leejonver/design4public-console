@@ -123,12 +123,12 @@ export default function BrandsPage() {
         )}
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodyMd" fontWeight="bold">
+        <Text variant="bodyMd" as="span">
           {brand.name}
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text variant="bodyMd" color="subdued">
+        <Text variant="bodyMd" as="span">
           {brand.description || '설명 없음'}
         </Text>
       </IndexTable.Cell>
