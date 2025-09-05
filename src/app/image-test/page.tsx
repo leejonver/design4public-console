@@ -49,7 +49,7 @@ export default function ImageTestPage() {
               {/* 성공 메시지 */}
               {successMessage && (
                 <div className="mb-4">
-                  <Banner status="success">
+                  <Banner tone="success">
                     {successMessage}
                   </Banner>
                 </div>
