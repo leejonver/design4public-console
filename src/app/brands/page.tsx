@@ -165,7 +165,7 @@ export default function BrandsPage() {
       <Page
         title="브랜드 관리"
         primaryAction={
-          <Button primary onClick={handleCreate}>
+          <Button variant="primary" onClick={handleCreate}>
             새 브랜드
           </Button>
         }
