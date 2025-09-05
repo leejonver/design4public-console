@@ -195,7 +195,7 @@ export default function BrandsPage() {
                   selectable={false}
                   emptyState={
                     <div className="p-8 text-center">
-                      <Text variant="bodyMd" color="subdued">
+                      <Text variant="bodyMd" as="span">
                         아직 등록된 브랜드가 없습니다.
                       </Text>
                       <div className="mt-4">
